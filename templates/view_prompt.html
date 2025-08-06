@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block title %}{{ prompt.title }} - 프롬프트 관리 시스템{% endblock %}
+
+{% block page_title %}프롬프트 상세 보기{% endblock %}
+
+{% block page_actions %}
+<button class="btn-copy" onclick="copyToClipboard({{ prompt.id }})" style="margin-right: var(--spacing-2);">
+    <i class="fas fa-copy"></i>
+    복사
+</button>
+<a href="{{ url_for('edit_prompt', id=prompt.id) }}" class="btn-glass" style="text-decoration: none;">
+    <i class="fas fa-edit"></i>
+    수정
+</a>
+<a href="{{ url_for('index') }}" class="btn-glass" style="text-decoration: none;">
+    <i class="fas fa-arrow-left"></i>
+    목록으로
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="modern-card animate-fade-in-up">
+    <div class="modern-card-header">
+        <div>
+            <h3 class="modern-card-title">{{ prompt.title }}</h3>
+            <span class="modern-card-badge" style="background: {{ prompt.category_color or '#6366f1' }}">
+                {{ prompt.category_name or prompt.category }}
+            </span>
+        </div>
+        <div style="display: flex; gap: var(--spacing-2);">
+            <button class="btn-copy" onclick="copyToClipboard({{ prompt.id }})">
+                <i class="fas fa-copy"></i>
+                복사
+            </button>
+            <a href="{{ url_for('edit_prompt', id=prompt.id) }}" class="btn-glass" style="text-decoration: none;">
+                <i class="fas fa-edit"></i>
+                수정
+            </a>
+        </div>
+    </div>
+
+    {% if prompt.description %}
+    <div style="margin-bottom: var(--spacing-6);">
+        <h4 style="color: var(--color-text-primary); margin-bottom: var(--spacing-2);">
+            <i class="fas fa-info-circle"></i>
+            설명
+        </h4>
+        <p style="color: var(--color-text-secondary); margin: 0; line-height: var(--line-height-relaxed);">
+            {{ prompt.description }}
+        </p>
+    </div>
+    {% endif %}
+
+    <div style="margin-bottom: var(--spacing-6);">
+        <h4 style="color: var(--color-text-primary); margin-bottom: var(--spacing-2);">
+            <i class="fas fa-code"></i>
+            프롬프트 내용
+        </h4>
+        <div
+            style="background: var(--color-gray-50); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: var(--spacing-4); font-family: var(--font-family-mono); font-size: var(--font-size-sm); line-height: var(--line-height-relaxed); white-space: pre-wrap; overflow-x: auto;">
+            {{ prompt.content }}
+        </div>
+    </div>
+
+    <div style="display: flex; gap: var(--spacing-6); flex-wrap: wrap;">
+        <div>
+            <h4
+                style="color: var(--color-text-primary); margin-bottom: var(--spacing-2); font-size: var(--font-size-sm);">
+                <i class="fas fa-clock"></i>
+                생성일
+            </h4>
+            <p style="color: var(--color-text-secondary); margin: 0; font-size: var(--font-size-sm);">
+                {{ prompt.created_at if prompt.created_at else 'N/A' }}
+            </p>
+        </div>
+
+        <div>
+            <h4
+                style="color: var(--color-text-primary); margin-bottom: var(--spacing-2); font-size: var(--font-size-sm);">
+                <i class="fas fa-edit"></i>
+                수정일
+            </h4>
+            <p style="color: var(--color-text-secondary); margin: 0; font-size: var(--font-size-sm);">
+                {{ prompt.updated_at if prompt.updated_at else 'N/A' }}
+            </p>
+        </div>
+
+        {% if prompt.tags %}
+        <div>
+            <h4
+                style="color: var(--color-text-primary); margin-bottom: var(--spacing-2); font-size: var(--font-size-sm);">
+                <i class="fas fa-tags"></i>
+                태그
+            </h4>
+            <div style="display: flex; gap: var(--spacing-1); flex-wrap: wrap;">
+                {% for tag in prompt.tags.split(',') %}
+                <span class="badge badge-outline" style="font-size: var(--font-size-xs);">
+                    {{ tag.strip() }}
+                </span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- 액션 버튼 -->
+<div style="margin-top: var(--spacing-6); display: flex; gap: var(--spacing-4); flex-wrap: wrap;">
+    <button class="btn-glass btn-glass-primary" onclick="copyToClipboard({{ prompt.id }}, this)">
+        <i class="fas fa-copy"></i>
+        클립보드로 복사
+    </button>
+
+    <a href="{{ url_for('edit_prompt', id=prompt.id) }}" class="btn-glass" style="text-decoration: none;">
+        <i class="fas fa-edit"></i>
+        프롬프트 수정
+    </a>
+
+    <button class="btn-glass" style="color: var(--color-danger);"
+        onclick="confirmDelete('{{ url_for('delete_prompt', id=prompt.id) }}', '이 프롬프트를 삭제하시겠습니까?')">
+        <i class="fas fa-trash"></i>
+        프롬프트 삭제
+    </button>
+
+    <a href="{{ url_for('index') }}" class="btn-glass" style="text-decoration: none;">
+        <i class="fas fa-arrow-left"></i>
+        목록으로 돌아가기
+    </a>
+</div>
+
+<!-- 사용 통계 -->
+<div class="modern-card" style="margin-top: var(--spacing-6);">
+    <div class="modern-card-header">
+        <h3 class="modern-card-title">
+            <i class="fas fa-chart-bar"></i>
+            프롬프트 정보
+        </h3>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--spacing-4);">
+        <div
+            style="text-align: center; padding: var(--spacing-4); background: var(--color-gray-50); border-radius: var(--radius-lg);">
+            <div
+                style="font-size: var(--font-size-2xl); font-weight: var(--font-weight-bold); color: var(--color-primary);">
+                {{ prompt.content|length }}
+            </div>
+            <div style="font-size: var(--font-size-sm); color: var(--color-text-muted);">
+                문자 수
+            </div>
+        </div>
+
+        <div
+            style="text-align: center; padding: var(--spacing-4); background: var(--color-gray-50); border-radius: var(--radius-lg);">
+            <div
+                style="font-size: var(--font-size-2xl); font-weight: var(--font-weight-bold); color: var(--color-secondary);">
+                {{ prompt.content.split()|length }}
+            </div>
+            <div style="font-size: var(--font-size-sm); color: var(--color-text-muted);">
+                단어 수
+            </div>
+        </div>
+
+        <div
+            style="text-align: center; padding: var(--spacing-4); background: var(--color-gray-50); border-radius: var(--radius-lg);">
+            <div
+                style="font-size: var(--font-size-2xl); font-weight: var(--font-weight-bold); color: var(--color-success);">
+                {{ prompt.content.split('\n')|length }}
+            </div>
+            <div style="font-size: var(--font-size-sm); color: var(--color-text-muted);">
+                줄 수
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}프롬프트 수정 - 프롬프트 관리 시스템{% endblock %}
+
+{% block page_title %}프롬프트 수정{% endblock %}
+
+{% block page_actions %}
+<a href="{{ url_for('view_prompt', id=prompt.id) }}" class="btn-glass" style="text-decoration: none;">
+    <i class="fas fa-eye"></i>
+    보기
+</a>
+<a href="{{ url_for('index') }}" class="btn-glass" style="text-decoration: none;">
+    <i class="fas fa-arrow-left"></i>
+    목록으로
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="modern-card animate-fade-in-up">
+    <form method="POST" class="form">
+        <div class="form-group" style="display: flex; align-items: flex-start; gap: var(--spacing-4);">
+            <label class="form-label required" style="min-width: 150px; margin-top: var(--spacing-2);">
+                <span style="color: red;">*</span> 프롬프트 제목
+            </label>
+            <div style="flex: 1;">
+                <input type="text" name="title" class="form-control input-glass" placeholder="프롬프트 제목을 입력하세요"
+                    value="{{ prompt.title }}" required title="프롬프트를 식별할 수 있는 제목을 입력하세요">
+            </div>
+        </div>
+
+        <div class="form-group" style="display: flex; align-items: flex-start; gap: var(--spacing-4);">
+            <label class="form-label required" style="min-width: 150px; margin-top: var(--spacing-2);">
+                <span style="color: red;">*</span> 카테고리
+            </label>
+            <div style="flex: 1;">
+                <select name="category" class="form-control form-select input-glass" required style="width: 30ch;"
+                    title="프롬프트의 분류를 선택하세요">
+                    <option value="">카테고리를 선택하세요</option>
+                    {% for category in categories %}
+                    <option value="{{ category.name }}" {% if category.name==prompt.category %}selected{% endif %}>
+                        {{ category.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group" style="display: flex; align-items: flex-start; gap: var(--spacing-4);">
+            <label class="form-label" style="min-width: 150px; margin-top: var(--spacing-2);">
+                설명
+            </label>
+            <div style="flex: 1;">
+                <textarea name="description" class="form-control form-textarea input-glass" rows="3"
+                    placeholder="프롬프트에 대한 간단한 설명을 입력하세요"
+                    style="width: 100ch; height: 100px;" title="프롬프트의 용도나 특징을 설명하세요">{{ prompt.description or '' }}</textarea>
+            </div>
+        </div>
+
+        <div class="form-group" style="display: flex; align-items: flex-start; gap: var(--spacing-4);">
+            <label class="form-label required" style="min-width: 150px; margin-top: var(--spacing-2);">
+                <span style="color: red;">*</span> 프롬프트 내용
+            </label>
+            <div style="flex: 1;">
+                <textarea name="content" class="form-control form-textarea input-glass" rows="10"
+                    placeholder="프롬프트 내용을 입력하세요" required
+                    style="width: 100ch; height: 400px;" title="실제 사용할 프롬프트 내용을 입력하세요">{{ prompt.content }}</textarea>
+            </div>
+        </div>
+
+        <div class="form-group" style="display: flex; align-items: flex-start; gap: var(--spacing-4);">
+            <label class="form-label required" style="min-width: 150px; margin-top: var(--spacing-2);">
+                <span style="color: red;">*</span> 태그
+            </label>
+            <div style="flex: 1;">
+                <input type="text" name="tags" class="form-control input-glass" placeholder="태그1, 태그2, 태그3"
+                    value="{{ prompt.tags or '' }}" style="width: 20ch;" title="쉼표로 구분하여 태그를 입력하세요">
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn-glass btn-glass-primary">
+                <i class="fas fa-save"></i>
+                수정 완료
+            </button>
+            <a href="{{ url_for('view_prompt', id=prompt.id) }}" class="btn-glass" style="text-decoration: none;">
+                <i class="fas fa-times"></i>
+                취소
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- 수정 이력 -->
+<div class="modern-card" style="margin-top: var(--spacing-6);">
+    <div class="modern-card-header">
+        <h3 class="modern-card-title">
+            <i class="fas fa-history"></i>
+            수정 이력
+        </h3>
+    </div>
+    <div style="color: var(--color-text-secondary);">
+        <div
+            style="display: flex; justify-content: space-between; align-items: center; padding: var(--spacing-3) 0; border-bottom: 1px solid var(--color-border);">
+            <div>
+                <strong>생성일:</strong> {{ prompt.created_at if prompt.created_at else 'N/A' }}
+            </div>
+            <span class="badge badge-success">생성</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: var(--spacing-3) 0;">
+            <div>
+                <strong>최종 수정일:</strong> {{ prompt.updated_at if prompt.updated_at else 'N/A' }}
+            </div>
+            <span class="badge badge-warning">수정</span>
+        </div>
+    </div>
+</div>
+{% endblock %}

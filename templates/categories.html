@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}카테고리 관리 - 프롬프트 관리 시스템{% endblock %}
+
+{% block page_title %}카테고리 관리{% endblock %}
+
+{% block page_actions %}
+<a href="{{ url_for('index') }}" class="btn-glass" style="text-decoration: none;">
+    <i class="fas fa-arrow-left"></i>
+    목록으로
+</a>
+{% endblock %}
+
+{% block content %}
+<!-- 새 카테고리 추가 -->
+<div class="modern-card animate-fade-in-up">
+    <div class="modern-card-header">
+        <h3 class="modern-card-title">
+            <i class="fas fa-plus"></i>
+            새 카테고리 추가
+        </h3>
+    </div>
+    
+    <form method="POST" action="{{ url_for('new_category') }}" class="form">
+        <div style="display: grid; grid-template-columns: 1fr auto; gap: var(--spacing-4); align-items: end;">
+            <div class="form-group">
+                <label class="form-label required">카테고리 이름</label>
+                <input type="text" name="name" class="form-control input-glass" placeholder="카테고리 이름을 입력하세요" required>
+                <div class="form-text">새로운 카테고리 이름을 입력하세요.</div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">색상</label>
+                <input type="color" name="color" class="form-control input-glass" value="#6366f1" style="width: 60px; height: 40px; padding: 0; border: none;">
+                <div class="form-text">카테고리 색상을 선택하세요.</div>
+            </div>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn-glass btn-glass-primary">
+                <i class="fas fa-plus"></i>
+                카테고리 추가
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- 카테고리 목록 -->
+<div class="modern-card" style="margin-top: var(--spacing-6);">
+    <div class="modern-card-header">
+        <h3 class="modern-card-title">
+            <i class="fas fa-tags"></i>
+            카테고리 목록
+        </h3>
+        <span class="modern-card-badge">{{ categories|length }}개</span>
+    </div>
+    
+    {% if categories %}
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: var(--spacing-4);">
+        {% for category in categories %}
+        <div class="prompt-card" style="position: relative;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-4);">
+                <div style="display: flex; align-items: center; gap: var(--spacing-3);">
+                    <div style="width: 20px; height: 20px; border-radius: var(--radius-full); background: {{ category.color }};"></div>
+                    <h4 style="margin: 0; color: var(--color-text-primary);">{{ category.name }}</h4>
+                </div>
+                
+                <div style="display: flex; gap: var(--spacing-2);">
+                    <span class="badge badge-outline" style="font-size: var(--font-size-xs);">
+                        {{ category.created_at.split(' ')[0] if category.created_at else 'N/A' }}
+                    </span>
+                    
+                    <button class="btn-glass" style="color: var(--color-danger); padding: var(--spacing-1) var(--spacing-2); font-size: var(--font-size-xs);" 
+                            onclick="confirmDelete('{{ url_for('delete_category', id=category.id) }}', '이 카테고리를 삭제하시겠습니까?')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div style="color: var(--color-text-secondary); font-size: var(--font-size-sm);">
+                <div style="margin-bottom: var(--spacing-2);">
+                    <strong>색상:</strong> {{ category.color }}
+                </div>
+                <div>
+                    <strong>생성일:</strong> {{ category.created_at if category.created_at else 'N/A' }}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-tags"></i>
+        <h3>카테고리가 없습니다</h3>
+        <p>첫 번째 카테고리를 추가해보세요!</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- 카테고리 사용 통계 -->
+<div class="modern-card" style="margin-top: var(--spacing-6);">
+    <div class="modern-card-header">
+        <h3 class="modern-card-title">
+            <i class="fas fa-chart-pie"></i>
+            카테고리 통계
+        </h3>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--spacing-4);">
+        <div style="text-align: center; padding: var(--spacing-4); background: var(--color-gray-50); border-radius: var(--radius-lg);">
+            <div style="font-size: var(--font-size-2xl); font-weight: var(--font-weight-bold); color: var(--color-primary);">
+                {{ categories|length }}
+            </div>
+            <div style="font-size: var(--font-size-sm); color: var(--color-text-muted);">
+                총 카테고리
+            </div>
+        </div>
+        
+        <div style="text-align: center; padding: var(--spacing-4); background: var(--color-gray-50); border-radius: var(--radius-lg);">
+            <div style="font-size: var(--font-size-2xl); font-weight: var(--font-weight-bold); color: var(--color-secondary);">
+                0
+            </div>
+            <div style="font-size: var(--font-size-sm); color: var(--color-text-muted);">
+                오늘 생성
+            </div>
+        </div>
+        
+        <div style="text-align: center; padding: var(--spacing-4); background: var(--color-gray-50); border-radius: var(--radius-lg);">
+            <div style="font-size: var(--font-size-2xl); font-weight: var(--font-weight-bold); color: var(--color-success);">
+                {{ categories|length }}
+            </div>
+            <div style="font-size: var(--font-size-sm); color: var(--color-text-muted);">
+                활성 카테고리
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 카테고리 관리 팁 -->
+<div class="modern-card" style="margin-top: var(--spacing-6);">
+    <div class="modern-card-header">
+        <h3 class="modern-card-title">
+            <i class="fas fa-lightbulb"></i>
+            카테고리 관리 팁
+        </h3>
+    </div>
+    <div style="color: var(--color-text-secondary);">
+        <ul style="margin: 0; padding-left: var(--spacing-4);">
+            <li>프롬프트를 효율적으로 분류하기 위해 명확한 카테고리를 만드세요</li>
+            <li>색상을 활용하여 시각적으로 구분하기 쉽게 만드세요</li>
+            <li>사용하지 않는 카테고리는 삭제하여 정리를 유지하세요</li>
+            <li>카테고리 이름은 간결하고 이해하기 쉽게 작성하세요</li>
+            <li>프롬프트가 있는 카테고리는 삭제할 수 없습니다</li>
+        </ul>
+    </div>
+</div>
+{% endblock %} 

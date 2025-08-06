@@ -1,0 +1,19 @@
+{
+    "venvPath": ".",
+    "pythonPath": "C:\\Python313\\python.exe",
+    "venv": "",
+    "extraPaths": [],
+    "typeCheckingMode": "basic",
+    "useLibraryCodeForTypes": true,
+    "autoImportCompletions": true,
+    "include": [
+        "."
+    ],
+    "exclude": [
+        "**/node_modules",
+        "**/__pycache__",
+        "**/venv",
+        "**/env",
+        "**/.venv"
+    ]
+}

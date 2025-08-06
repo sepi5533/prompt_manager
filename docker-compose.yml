@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  prompt-manager:
+    build: .
+    ports:
+      - "5000:5000"
+    volumes:
+      # 데이터베이스 파일을 호스트와 공유하여 데이터 유지
+      - ./prompts.db:/app/prompts.db
+      # 외부 CSS 파일을 컨테이너 내부로 마운트
+      - C:\cursorai_working\common_style:/app/common_style
+    environment:
+      - FLASK_APP=prompt_manager.py
+      - FLASK_ENV=production
+      - COMMON_STYLE_PATH=/app/common_style
+    restart: unless-stopped
+    container_name: prompt-manager-app 
