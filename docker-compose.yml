@@ -10,9 +10,11 @@ services:
       - ./prompts.db:/app/prompts.db
       # 외부 CSS 파일을 컨테이너 내부로 마운트
       - C:\cursorai_working\common_style:/app/common_style
+      # PWA 정적 파일들을 컨테이너 내부로 마운트
+      - ./static:/app/static
     environment:
       - FLASK_APP=prompt_manager.py
       - FLASK_ENV=production
       - COMMON_STYLE_PATH=/app/common_style
     restart: unless-stopped
-    container_name: prompt-manager-app 
+    container_name: prompt-manager-app

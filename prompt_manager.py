@@ -33,6 +33,29 @@ def serve_css(filename):
     print(f"파일 존재: {os.path.exists(os.path.join(external_style_path, filename))}")
     return send_from_directory(external_style_path, filename)
 
+# PWA 관련 라우트
+@app.route('/static/<path:filename>')
+def serve_static(filename):
+    """정적 파일 서빙 (PWA 파일들)"""
+    return send_from_directory('static', filename)
+
+@app.route('/manifest.json')
+def manifest():
+    """PWA Manifest 파일"""
+    return send_from_directory('static', 'manifest.json')
+
+@app.route('/sw.js')
+def service_worker():
+    """Service Worker 파일"""
+    response = app.make_response(send_from_directory('static', 'sw.js'))
+    response.headers['Content-Type'] = 'application/javascript'
+    return response
+
+@app.route('/pwa-test')
+def pwa_test():
+    """PWA 테스트 페이지"""
+    return render_template('pwa_test.html')
+
 # 데이터베이스 초기화
 def init_db():
     """데이터베이스 테이블 생성"""

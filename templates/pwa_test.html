@@ -1,0 +1,264 @@
+{% extends "base.html" %}
+
+{% block title %}PWA 테스트 - 프롬프트 관리 시스템{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="content-header">
+        <h1><i class="fas fa-mobile-alt"></i> PWA 기능 테스트</h1>
+        <p>프롬프트 관리자의 PWA 기능들을 테스트해보세요.</p>
+    </div>
+
+    <div class="test-grid">
+        <!-- PWA 설치 테스트 -->
+        <div class="test-card">
+            <h3><i class="fas fa-download"></i> PWA 설치</h3>
+            <p>프롬프트 관리자를 홈 화면에 설치할 수 있습니다.</p>
+            <button onclick="installPWA()" class="btn btn-primary">
+                <i class="fas fa-download"></i> 앱 설치
+            </button>
+        </div>
+
+        <!-- 오프라인 테스트 -->
+        <div class="test-card">
+            <h3><i class="fas fa-wifi-slash"></i> 오프라인 모드</h3>
+            <p>네트워크 연결을 끊고 오프라인에서도 앱이 작동하는지 확인하세요.</p>
+            <div class="status-indicator">
+                <span id="online-status" class="online">온라인</span>
+            </div>
+        </div>
+
+        <!-- 알림 테스트 -->
+        <div class="test-card">
+            <h3><i class="fas fa-bell"></i> 푸시 알림</h3>
+            <p>푸시 알림 권한을 요청하고 테스트 알림을 보내보세요.</p>
+            <div class="button-group">
+                <button onclick="requestNotificationPermission()" class="btn btn-secondary">
+                    <i class="fas fa-key"></i> 권한 요청
+                </button>
+                <button onclick="sendTestNotification()" class="btn btn-success">
+                    <i class="fas fa-paper-plane"></i> 테스트 알림
+                </button>
+            </div>
+        </div>
+
+        <!-- 캐시 테스트 -->
+        <div class="test-card">
+            <h3><i class="fas fa-database"></i> 캐시 관리</h3>
+            <p>Service Worker의 캐시 상태를 확인하고 관리합니다.</p>
+            <div class="button-group">
+                <button onclick="checkCacheStatus()" class="btn btn-info">
+                    <i class="fas fa-info-circle"></i> 캐시 상태 확인
+                </button>
+                <button onclick="clearCache()" class="btn btn-warning">
+                    <i class="fas fa-trash"></i> 캐시 삭제
+                </button>
+            </div>
+        </div>
+
+        <!-- 백그라운드 동기화 -->
+        <div class="test-card">
+            <h3><i class="fas fa-sync-alt"></i> 백그라운드 동기화</h3>
+            <p>오프라인 중 저장된 데이터를 온라인 복구 시 동기화합니다.</p>
+            <button onclick="registerBackgroundSync()" class="btn btn-primary">
+                <i class="fas fa-sync"></i> 동기화 등록
+            </button>
+        </div>
+
+        <!-- 앱 정보 -->
+        <div class="test-card">
+            <h3><i class="fas fa-info-circle"></i> 앱 정보</h3>
+            <p>PWA 관련 정보를 확인합니다.</p>
+            <div class="info-list">
+                <div class="info-item">
+                    <span class="label">Service Worker:</span>
+                    <span id="sw-status">확인 중...</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">설치 가능:</span>
+                    <span id="install-status">확인 중...</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">알림 권한:</span>
+                    <span id="notification-status">확인 중...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .test-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: var(--spacing-6);
+        margin-top: var(--spacing-6);
+    }
+
+    .test-card {
+        background: var(--glass-bg);
+        backdrop-filter: var(--glass-backdrop);
+        -webkit-backdrop-filter: var(--glass-backdrop);
+        border: 1px solid var(--glass-border);
+        border-radius: var(--radius-2xl);
+        padding: var(--spacing-6);
+        transition: all var(--transition-base);
+    }
+
+    .test-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .test-card h3 {
+        color: var(--color-text-primary);
+        margin-bottom: var(--spacing-3);
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-2);
+    }
+
+    .test-card p {
+        color: var(--color-text-secondary);
+        margin-bottom: var(--spacing-4);
+        line-height: var(--line-height-relaxed);
+    }
+
+    .button-group {
+        display: flex;
+        gap: var(--spacing-2);
+        flex-wrap: wrap;
+    }
+
+    .status-indicator {
+        margin-top: var(--spacing-3);
+    }
+
+    .info-list {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-2);
+    }
+
+    .info-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: var(--spacing-2);
+        background: var(--color-gray-100);
+        border-radius: var(--radius-lg);
+    }
+
+    .info-item .label {
+        font-weight: var(--font-weight-medium);
+        color: var(--color-text-primary);
+    }
+
+    .info-item span:last-child {
+        font-weight: var(--font-weight-semibold);
+        color: var(--color-primary);
+    }
+
+    @media (max-width: 768px) {
+        .test-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .button-group {
+            flex-direction: column;
+        }
+    }
+</style>
+
+<script>
+    // PWA 상태 확인
+    document.addEventListener('DOMContentLoaded', function () {
+        checkPWAStatus();
+    });
+
+    function checkPWAStatus() {
+        // Service Worker 상태 확인
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistration().then(registration => {
+                const swStatus = document.getElementById('sw-status');
+                if (registration) {
+                    swStatus.textContent = '등록됨';
+                    swStatus.style.color = 'var(--color-success)';
+                } else {
+                    swStatus.textContent = '미등록';
+                    swStatus.style.color = 'var(--color-warning)';
+                }
+            });
+        } else {
+            document.getElementById('sw-status').textContent = '지원 안됨';
+            document.getElementById('sw-status').style.color = 'var(--color-error)';
+        }
+
+        // 설치 가능 상태 확인
+        const installStatus = document.getElementById('install-status');
+        if (window.promptManagerPWA && window.promptManagerPWA.deferredPrompt) {
+            installStatus.textContent = '설치 가능';
+            installStatus.style.color = 'var(--color-success)';
+        } else {
+            installStatus.textContent = '설치 불가';
+            installStatus.style.color = 'var(--color-warning)';
+        }
+
+        // 알림 권한 확인
+        if ('Notification' in window) {
+            const notificationStatus = document.getElementById('notification-status');
+            switch (Notification.permission) {
+                case 'granted':
+                    notificationStatus.textContent = '허용됨';
+                    notificationStatus.style.color = 'var(--color-success)';
+                    break;
+                case 'denied':
+                    notificationStatus.textContent = '거부됨';
+                    notificationStatus.style.color = 'var(--color-error)';
+                    break;
+                default:
+                    notificationStatus.textContent = '요청 안됨';
+                    notificationStatus.style.color = 'var(--color-warning)';
+            }
+        }
+    }
+
+    function checkCacheStatus() {
+        if ('caches' in window) {
+            caches.keys().then(cacheNames => {
+                alert(`캐시 목록:\n${cacheNames.join('\n')}`);
+            });
+        } else {
+            alert('캐시 API가 지원되지 않습니다.');
+        }
+    }
+
+    function clearCache() {
+        if ('caches' in window) {
+            caches.keys().then(cacheNames => {
+                return Promise.all(
+                    cacheNames.map(cacheName => caches.delete(cacheName))
+                );
+            }).then(() => {
+                alert('모든 캐시가 삭제되었습니다.');
+            });
+        } else {
+            alert('캐시 API가 지원되지 않습니다.');
+        }
+    }
+
+    function registerBackgroundSync() {
+        if ('serviceWorker' in navigator && 'sync' in window.ServiceWorkerRegistration.prototype) {
+            navigator.serviceWorker.ready.then(registration => {
+                return registration.sync.register('background-sync');
+            }).then(() => {
+                alert('백그라운드 동기화가 등록되었습니다.');
+            }).catch(error => {
+                alert('백그라운드 동기화 등록 실패: ' + error.message);
+            });
+        } else {
+            alert('백그라운드 동기화가 지원되지 않습니다.');
+        }
+    }
+</script>
+{% endblock %}

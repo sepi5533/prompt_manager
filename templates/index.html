@@ -9,6 +9,10 @@
     <i class="fas fa-plus"></i>
     새 프롬프트
 </a>
+<a href="{{ url_for('pwa_test') }}" class="btn-glass" style="margin-left: var(--spacing-2);">
+    <i class="fas fa-mobile-alt"></i>
+    PWA 테스트
+</a>
 {% endblock %}
 
 {% block content %}
@@ -30,7 +34,8 @@
             {% endfor %}
         </select>
 
-        <button type="submit" class="btn-glass btn-glass-primary" style="background: var(--color-primary); color: var(--color-white);">
+        <button type="submit" class="btn-glass btn-glass-primary"
+            style="background: var(--color-primary); color: var(--color-white);">
             검색
         </button>
 
