@@ -1,14 +1,22 @@
-const CACHE_NAME = 'prompt-manager-v1.0.0';
-const STATIC_CACHE = 'static-v1.0.0';
-const DYNAMIC_CACHE = 'dynamic-v1.0.0';
+const CACHE_NAME = 'prompt-manager-v1.1.0';
+const STATIC_CACHE = 'static-v1.1.0';
+const DYNAMIC_CACHE = 'dynamic-v1.1.0';
 
 // 캐시할 정적 파일들
 const STATIC_FILES = [
   '/',
-  '/css/global.css',
-  '/css/layout.css',
-  '/css/components.css',
-  '/css/animations.css',
+  '/common_style/global.css',
+  '/common_style/layout.css',
+  '/common_style/components.css',
+  '/common_style/animations.css',
+  '/common_style/button.css',
+  '/common_style/card.css',
+  '/common_style/form.css',
+  '/common_style/modal.css',
+  '/common_style/navigation.css',
+  '/common_style/table.css',
+  '/common_style/utility.css',
+  '/common_style/loading-spinner.css',
   '/static/manifest.json',
   '/static/icons/icon.svg',
   '/static/pwa.css',

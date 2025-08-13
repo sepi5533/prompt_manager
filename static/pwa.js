@@ -140,7 +140,7 @@ class PromptManagerPWA {
     notification.innerHTML = `
       <div class="update-content">
         <i class="fas fa-sync-alt"></i>
-        <span>새로운 업데이트가 있습니다. 새로고침하세요.</span>
+        <span>새로운 업데이트가 있습니다! 좌우 패널 구조가 개선되었습니다.</span>
         <button onclick="this.parentElement.parentElement.remove()">닫기</button>
         <button onclick="location.reload()">새로고침</button>
       </div>
