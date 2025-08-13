@@ -9,7 +9,7 @@
     <!-- PWA Meta Tags -->
     <meta name="description" content="프롬프트를 효율적으로 관리하고 복사할 수 있는 웹 애플리케이션">
     <meta name="theme-color" content="#4a90e2">
-    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="프롬프트 관리자">
     <meta name="msapplication-TileColor" content="#4a90e2">
@@ -27,6 +27,7 @@
     <link rel="stylesheet" href="{{ url_for('serve_css', filename='layout.css') }}">
     <link rel="stylesheet" href="{{ url_for('serve_css', filename='components.css') }}">
     <link rel="stylesheet" href="{{ url_for('serve_css', filename='animations.css') }}">
+    <link rel="stylesheet" href="{{ url_for('serve_css', filename='modal.css') }}">
 
     <!-- PWA CSS -->
     <link rel="stylesheet" href="{{ url_for('serve_static', filename='pwa.css') }}">
@@ -36,87 +37,234 @@
 
     <!-- Custom Styles -->
     <style>
-        .prompt-grid {
+        /* 그리드 헤더 추가 */
+        .grid-header {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(clamp(300px, 30vw, 400px), 1fr));
+            grid-template-columns: repeat(3, 1fr);
             gap: var(--spacing-6);
-            margin-top: var(--spacing-6);
+            margin-bottom: var(--spacing-3);
+            padding: 0 var(--spacing-4);
+            font-weight: var(--font-weight-semibold);
+            color: var(--color-text-secondary);
+            font-size: var(--font-size-sm);
+            border-bottom: 2px solid var(--color-gray-200);
+            padding-bottom: var(--spacing-2);
         }
 
-        .prompt-card {
-            background: var(--glass-bg);
-            backdrop-filter: var(--glass-backdrop);
-            -webkit-backdrop-filter: var(--glass-backdrop);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius-3xl);
-            padding: clamp(var(--spacing-4), 3vw, var(--spacing-6));
-            transition: all var(--transition-base);
-            position: relative;
+        .grid-header>div {
+            text-align: center;
+        }
+
+        /* 그리드 라인 강화 - 최고 우선순위 */
+        .prompt-grid {
+            display: grid !important;
+            grid-template-columns: repeat(3, 1fr) !important;
+            /* 3열 고정 그리드 */
+            gap: 0 !important;
+            margin-top: var(--spacing-4);
+            width: 100%;
+            padding: 0;
+            border: 2px solid var(--color-gray-300);
+            border-radius: var(--radius-lg);
+            background: var(--color-white);
             overflow: hidden;
         }
 
-        .prompt-card:hover {
-            transform: translateY(-4px);
-            box-shadow: var(--shadow-xl);
+        /* 카드 스타일을 완전히 테이블 셀로 변경 - 최고 우선순위 */
+        .prompt-card {
+            background: var(--color-white) !important;
+            border: 1px solid var(--color-gray-200) !important;
+            border-radius: 0 !important;
+            padding: var(--spacing-4);
+            transition: none !important;
+            position: relative;
+            cursor: pointer;
+            min-height: 120px;
+            display: block !important;
+            /* flex 관련 속성 완전 제거 */
+            flex: none !important;
+            flex-direction: unset !important;
+            justify-content: unset !important;
+            align-items: unset !important;
+            box-shadow: none !important;
+            margin: 0 !important;
+            /* 추가 강제 스타일 */
+            transform: none !important;
+            transition: none !important;
+            /* 모든 카드 효과 제거 */
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            filter: none !important;
+            /* 그리드 셀처럼 동작 */
+            width: auto !important;
+            height: auto !important;
         }
 
-        .prompt-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+        /* 카드 내부 요소들도 block으로 변경 */
+        .prompt-header,
+        .prompt-content,
+        .prompt-meta,
+        .prompt-actions {
+            display: block !important;
+            width: 100% !important;
+            margin-bottom: var(--spacing-2) !important;
         }
 
         .prompt-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: var(--spacing-4);
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: flex-start !important;
+            margin-bottom: var(--spacing-2) !important;
         }
 
         .prompt-title {
-            font-size: var(--font-size-lg);
+            font-size: var(--font-size-sm);
             font-weight: var(--font-weight-semibold);
             color: var(--color-text-primary);
             margin: 0;
             line-height: 1.3;
+            flex: 1;
+            margin-right: var(--spacing-2);
         }
 
         .prompt-category {
-            padding: var(--spacing-1) var(--spacing-3);
+            padding: var(--spacing-1) var(--spacing-2);
             border-radius: var(--radius-full);
             font-size: var(--font-size-xs);
             font-weight: var(--font-weight-medium);
             color: var(--color-white);
             background: var(--color-primary);
+            white-space: nowrap;
+            flex-shrink: 0;
         }
 
         .prompt-content {
             color: var(--color-text-secondary);
-            font-size: var(--font-size-sm);
+            font-size: var(--font-size-xs);
             line-height: var(--line-height-relaxed);
-            margin-bottom: var(--spacing-4);
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;
+            margin-bottom: var(--spacing-2);
+            display: block !important;
             overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .prompt-meta {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
             font-size: var(--font-size-xs);
             color: var(--color-text-muted);
-            margin-bottom: var(--spacing-4);
+            gap: var(--spacing-2);
+            margin-bottom: var(--spacing-2) !important;
         }
 
         .prompt-actions {
+            display: flex !important;
+            gap: var(--spacing-1) !important;
+            flex-wrap: wrap !important;
+            justify-content: center !important;
+        }
+
+        .prompt-actions .btn-glass {
+            padding: var(--spacing-1) var(--spacing-2);
+            font-size: var(--font-size-xs);
+            min-width: auto;
+        }
+
+        .btn-copy {
+            background: var(--color-success);
+            color: var(--color-white);
+            border: none;
+            padding: var(--spacing-1) var(--spacing-2);
+            border-radius: var(--radius-md);
+            font-size: var(--font-size-xs);
+            cursor: pointer;
+            transition: all var(--transition-base);
             display: flex;
-            gap: var(--spacing-2);
+            align-items: center;
+            gap: var(--spacing-1);
+        }
+
+        .btn-copy:hover {
+            background: var(--color-success-dark);
+            transform: translateY(-1px);
+        }
+
+        /* 반응형 그리드 */
+        @media (max-width: 1200px) {
+            .prompt-grid {
+                grid-template-columns: repeat(2, 1fr);
+                /* 2열 */
+            }
+
+            .prompt-card:nth-child(2n) {
+                border-right: none;
+            }
+
+            .prompt-card:nth-child(n+3) {
+                border-top: 2px solid var(--color-gray-300);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .prompt-grid {
+                grid-template-columns: 1fr;
+                /* 1열 */
+            }
+
+            .prompt-card {
+                border-right: none !important;
+            }
+
+            .prompt-card:nth-child(n+2) {
+                border-top: 2px solid var(--color-gray-300);
+            }
+        }
+
+        .right-panel-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: var(--spacing-6);
+        }
+
+        .right-panel-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--color-text-muted);
+            text-align: center;
+            padding: var(--spacing-8);
+        }
+
+        .right-panel-placeholder i {
+            font-size: var(--font-size-4xl);
+            margin-bottom: var(--spacing-4);
+            opacity: 0.5;
+        }
+
+        .right-panel-placeholder h3 {
+            font-size: var(--font-size-lg);
+            margin-bottom: var(--spacing-2);
+            color: var(--color-text-secondary);
+        }
+
+        .right-panel-placeholder p {
+            font-size: var(--font-size-sm);
+            line-height: var(--line-height-relaxed);
+        }
+
+        .btn-glass-primary {
+            background: var(--color-primary);
+            color: var(--color-white);
+            border-color: var(--color-primary);
+        }
+
+        .btn-glass-primary:hover {
+            background: var(--color-primary-dark);
+            border-color: var(--color-primary-dark);
         }
 
         .btn-copy {
@@ -135,91 +283,138 @@
 
         .btn-copy:hover {
             background: var(--color-success-dark);
-            transform: scale(1.05);
+            transform: translateY(-1px);
         }
 
-        .search-container {
+        .btn-copy:active {
+            transform: translateY(0);
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--color-white);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 프롬프트 상세 정보 그리드 */
+        .prompt-detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: var(--spacing-6);
+            margin-top: var(--spacing-6);
+        }
+
+        .detail-card {
             background: var(--glass-bg);
             backdrop-filter: var(--glass-backdrop);
             -webkit-backdrop-filter: var(--glass-backdrop);
             border: 1px solid var(--glass-border);
             border-radius: var(--radius-xl);
-            padding: clamp(var(--spacing-4), 3vw, var(--spacing-6));
-            margin-bottom: clamp(var(--spacing-4), 3vw, var(--spacing-6));
-            max-width: 100%;
+            padding: var(--spacing-6);
+            transition: all var(--transition-base);
         }
 
+        .detail-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .detail-card h3 {
+            color: var(--color-text-primary);
+            margin-bottom: var(--spacing-4);
+            font-size: var(--font-size-lg);
+            font-weight: var(--font-weight-semibold);
+        }
+
+        .detail-card p {
+            color: var(--color-text-secondary);
+            margin-bottom: var(--spacing-3);
+            line-height: var(--line-height-relaxed);
+        }
+
+        .detail-card strong {
+            color: var(--color-text-primary);
+            font-weight: var(--font-weight-semibold);
+        }
+
+        /* 검색 폼 스타일 */
         .search-form {
             display: flex;
-            gap: var(--spacing-4);
+            gap: var(--spacing-3);
             align-items: center;
             flex-wrap: wrap;
         }
 
-        .search-input {
+        .input-group {
+            position: relative;
             flex: 1;
             min-width: 200px;
         }
 
-        .category-filter {
-            min-width: 150px;
-        }
-
-        .search-form .btn-glass {
-            white-space: nowrap;
-            font-weight: var(--font-weight-medium);
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: var(--spacing-16);
-            color: var(--color-text-muted);
-        }
-
-        .empty-state i {
-            font-size: var(--font-size-4xl);
-            margin-bottom: var(--spacing-4);
-            opacity: 0.5;
-        }
-
-        .flash-messages {
-            position: fixed;
-            top: var(--spacing-4);
-            right: var(--spacing-4);
-            z-index: var(--z-toast);
-            max-width: 400px;
-        }
-
-        .flash-message {
+        .search-input {
+            width: 100%;
+            padding: var(--spacing-3) var(--spacing-4);
+            padding-right: var(--spacing-12);
             background: var(--glass-bg);
             backdrop-filter: var(--glass-backdrop);
             -webkit-backdrop-filter: var(--glass-backdrop);
             border: 1px solid var(--glass-border);
             border-radius: var(--radius-xl);
-            padding: var(--spacing-4);
-            margin-bottom: var(--spacing-2);
-            box-shadow: var(--shadow-lg);
-            animation: slideInRight 0.3s ease-out;
+            font-size: var(--font-size-sm);
+            color: var(--color-text-primary);
+            transition: all var(--transition-base);
         }
 
-        .flash-message.success {
-            border-color: var(--color-success);
-            background: rgba(16, 185, 129, 0.1);
+        .search-input:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+            transform: scale(1.02);
         }
 
-        .flash-message.error {
-            border-color: var(--color-danger);
-            background: rgba(239, 68, 68, 0.1);
+        .category-filter {
+            min-width: 150px;
+            padding: var(--spacing-3) var(--spacing-4);
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-backdrop);
+            -webkit-backdrop-filter: var(--glass-backdrop);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-xl);
+            font-size: var(--font-size-sm);
+            color: var(--color-text-primary);
+            transition: all var(--transition-base);
         }
 
-        .flash-message.warning {
-            border-color: var(--color-warning);
-            background: rgba(245, 158, 11, 0.1);
-        }
-
-        .flash-message.info {
-            border-color: var(--color-info);
-            background: rgba(6, 182, 212, 0.1);
+        .category-filter:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
         }
     </style>
 </head>
@@ -230,7 +425,7 @@
         <header class="main-header">
             <div class="header-content">
                 <h1 class="header-title">
-                    <i class="fas fa-magic"></i>
+                    <i class="fas fa-clipboard"></i>
                     프롬프트 관리 시스템
                 </h1>
                 <nav class="header-nav">
@@ -239,14 +434,13 @@
                         <i class="fas fa-home"></i>
                         홈
                     </a>
-                    <a href="{{ url_for('new_prompt') }}" class="nav-btn">
-                        <i class="fas fa-plus"></i>
-                        새 프롬프트
-                    </a>
-                    <a href="{{ url_for('categories') }}"
-                        class="nav-btn {% if request.endpoint == 'categories' %}active{% endif %}">
+                    <button onclick="showCategoryModal()" class="nav-btn">
                         <i class="fas fa-tags"></i>
                         카테고리
+                    </button>
+                    <a href="{{ url_for('pwa_test') }}" class="nav-btn">
+                        <i class="fas fa-mobile-alt"></i>
+                        PWA 테스트
                     </a>
                 </nav>
             </div>
@@ -254,18 +448,85 @@
 
         <!-- Main Content -->
         <main class="main-content">
+            <!-- Left Panel - 프롬프트 목록 -->
             <div class="left-panel">
                 <div class="panel-header">
                     <h2 class="panel-title">
-                        {% block page_title %}프롬프트 목록{% endblock %}
+                        <i class="fas fa-list"></i>
+                        프롬프트 목록
                     </h2>
                     <div class="panel-actions">
-                        {% block page_actions %}{% endblock %}
+                        <button class="btn-glass btn-glass-primary" onclick="showNewPromptForm()">
+                            <i class="fas fa-plus"></i>
+                            새 프롬프트
+                        </button>
                     </div>
                 </div>
 
+                <!-- 검색 및 필터 -->
+                <div class="search-container">
+                    <form method="GET" class="search-form">
+                        <div class="input-group">
+                            <input type="text" name="search" value="{{ search or '' }}" placeholder="프롬프트 검색..."
+                                class="search-input">
+                            <i class="fas fa-search"
+                                style="position: absolute; right: var(--spacing-3); top: 50%; transform: translateY(-50%); color: var(--color-text-muted); pointer-events: none;"></i>
+                        </div>
+
+                        <select name="category" class="category-filter">
+                            <option value="">모든 카테고리</option>
+                            {% for category in categories or [] %}
+                            <option value="{{ category.name }}" {% if category.name==(selected_category or '' )
+                                %}selected{% endif %}>
+                                {{ category.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+
+                        <button type="submit" class="btn-glass btn-glass-primary">
+                            <i class="fas fa-search"></i>
+                            검색
+                        </button>
+
+                        {% if search or selected_category %}
+                        <a href="{{ url_for('index') }}" class="btn-glass">
+                            <i class="fas fa-times"></i>
+                            초기화
+                        </a>
+                        {% endif %}
+                    </form>
+                </div>
+
+                <!-- 프롬프트 그리드 -->
                 <div class="tab-content">
-                    {% block content %}{% endblock %}
+                    {% block left_panel_content %}{% endblock %}
+                </div>
+            </div>
+
+            <!-- Right Panel - 프롬프트 상세/편집 -->
+            <div class="right-panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">
+                        <i class="fas fa-edit"></i>
+                        <span id="right-panel-title">프롬프트 상세</span>
+                    </h2>
+                    <div class="panel-actions" id="right-panel-actions">
+                        <!-- 동적으로 버튼들이 추가됩니다 -->
+                    </div>
+                </div>
+
+                <div class="right-panel-content" id="right-panel-content">
+                    <!-- 기본 플레이스홀더 -->
+                    <div class="right-panel-placeholder">
+                        <i class="fas fa-hand-pointer"></i>
+                        <h3>프롬프트를 선택하세요</h3>
+                        <p>좌측 목록에서 프롬프트를 선택하면 상세 정보를 확인할 수 있습니다.</p>
+                        <div class="placeholder-actions">
+                            <button class="btn btn-primary" onclick="showNewPromptForm()">
+                                <i class="fas fa-plus"></i> 새 프롬프트
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </main>
@@ -274,194 +535,806 @@
         <footer class="status-bar">
             <div class="status-content">
                 <span class="status-text">
-                    <i class="fas fa-database"></i>
-                    SQLite3 데이터베이스
+                    <i class="fas fa-info-circle"></i>
+                    프롬프트 관리 시스템 v1.0
                 </span>
                 <div class="status-indicators">
-                    <div class="status-indicator online">
+                    <span class="status-indicator online">
                         <i class="fas fa-circle"></i>
                         온라인
-                    </div>
+                    </span>
+                    <span class="status-indicator">
+                        <i class="fas fa-database"></i>
+                        SQLite3
+                    </span>
                 </div>
             </div>
         </footer>
     </div>
 
-    <!-- Flash Messages -->
-    <div class="flash-messages" id="flash-messages">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-        {% for category, message in messages %}
-        <div class="flash-message {{ category }}" id="flash-{{ loop.index }}">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <span>{{ message }}</span>
-                <button onclick="this.parentElement.parentElement.remove()"
-                    style="background: none; border: none; color: inherit; cursor: pointer; margin-left: var(--spacing-2);">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-        </div>
-        {% endfor %}
-        {% endif %}
-        {% endwith %}
-    </div>
+    <!-- PWA JavaScript -->
+    <script src="{{ url_for('serve_static', filename='pwa.js') }}"></script>
 
-    <!-- JavaScript -->
+    <!-- Custom JavaScript -->
     <script>
-        // Flash messages auto-hide
-        setTimeout(function () {
-            const flashMessages = document.querySelectorAll('.flash-message');
-            flashMessages.forEach(function (message) {
-                message.style.opacity = '0';
-                message.style.transform = 'translateX(100%)';
-                setTimeout(function () {
-                    message.remove();
-                }, 300);
-            });
-        }, 5000);
+        // 프롬프트 행 선택
+        function selectPromptRow(element, promptId) {
+            console.log('selectPromptRow called with:', { element, promptId });
 
-        // Copy to clipboard function
-        function copyToClipboard(promptId, buttonElement) {
-            fetch(`/api/copy/${promptId}`)
+            // 이전 선택 해제
+            document.querySelectorAll('.prompt-row').forEach(row => {
+                row.classList.remove('selected');
+            });
+
+            // 현재 프롬프트 행 선택
+            element.classList.add('selected');
+
+            // 선택된 프롬프트 ID 저장
+            window.selectedPromptId = promptId;
+            console.log('Selected prompt ID set to:', window.selectedPromptId);
+
+            // 그리드 클릭 시 바로 상세 정보 표시
+            viewPrompt(promptId);
+        }
+
+
+
+        // 프롬프트 전체 상세 정보 표시
+        function displayPromptFullDetails(prompt) {
+            console.log('displayPromptFullDetails called with prompt:', prompt);
+
+            const rightPanel = document.querySelector('.right-panel');
+
+            if (!rightPanel) {
+                console.error('Right panel not found');
+                return;
+            }
+
+            // 날짜 형식 변환
+            const createdDate = prompt.created_at ? prompt.created_at.split(' ')[0] : 'N/A';
+            const updatedDate = prompt.updated_at ? prompt.updated_at.split(' ')[0] : 'N/A';
+
+            // 태그 처리
+            const tags = prompt.tags ? prompt.tags.split(',').map(tag => tag.trim()) : [];
+
+            // 우측 패널 업데이트
+            rightPanel.innerHTML = `
+                                 <div class="panel-header">
+                     <h2>프롬프트 상세</h2>
+                 </div>
+                <div class="panel-content">
+                    <div class="prompt-detail-card">
+                        <div class="prompt-header">
+                            <h3 class="prompt-title">${prompt.title}</h3>
+                            <span class="category-tag" style="background: ${prompt.category_color || '#6366f1'}">
+                                ${prompt.category_name || prompt.category}
+                            </span>
+                        </div>
+                        
+                        ${prompt.description ? `
+                        <div class="prompt-description">
+                            <h4><i class="fas fa-info-circle"></i> 설명</h4>
+                            <p>${prompt.description}</p>
+                        </div>
+                        ` : ''}
+                        
+                        <div class="prompt-content">
+                            <h4><i class="fas fa-code"></i> 프롬프트 내용</h4>
+                            <div class="content-box">
+                                <pre>${prompt.content}</pre>
+                            </div>
+                        </div>
+                        
+                        <div class="prompt-meta">
+                            <div class="meta-item">
+                                <span class="meta-label"><i class="fas fa-clock"></i> 생성일:</span>
+                                <span class="meta-value">${createdDate}</span>
+                            </div>
+                            <div class="meta-item">
+                                <span class="meta-label"><i class="fas fa-edit"></i> 수정일:</span>
+                                <span class="meta-value">${updatedDate}</span>
+                            </div>
+                            ${tags.length > 0 ? `
+                            <div class="meta-item">
+                                <span class="meta-label"><i class="fas fa-tags"></i> 태그:</span>
+                                <div class="tags-container">
+                                    ${tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+                                </div>
+                            </div>
+                            ` : ''}
+                        </div>
+                        
+                        <div class="prompt-stats">
+                            <div class="stat-item">
+                                <span class="stat-number">${prompt.content.length}</span>
+                                <span class="stat-label">문자 수</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-number">${prompt.content.split(' ').length}</span>
+                                <span class="stat-label">단어 수</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-number">${prompt.content.split('\n').length}</span>
+                                <span class="stat-label">줄 수</span>
+                            </div>
+                        </div>
+                        
+                                                 <div class="prompt-actions">
+                             <button class="btn btn-primary" onclick="copyPromptContent('${prompt.content.replace(/'/g, "\\'")}')">
+                                 <i class="fas fa-copy"></i> 클립보드로 복사
+                             </button>
+                             <button class="btn btn-secondary" onclick="editPrompt(${prompt.id})">
+                                 <i class="fas fa-edit"></i> 수정
+                             </button>
+                             <button class="btn btn-danger" onclick="deletePrompt(${prompt.id})">
+                                 <i class="fas fa-trash"></i> 삭제
+                             </button>
+                             <button class="btn btn-success" onclick="showNewPromptForm()">
+                                 <i class="fas fa-plus"></i> 새 프롬프트
+                             </button>
+                         </div>
+                    </div>
+                </div>
+            `;
+
+            console.log('Right panel updated with full details successfully');
+        }
+
+        // 프롬프트 보기
+        function viewPrompt(promptId) {
+            console.log('viewPrompt called with promptId:', promptId);
+
+            // API를 통해 프롬프트 정보 가져오기
+            fetch(`/api/prompt/${promptId}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        const button = buttonElement || document.querySelector(`[onclick*="copyToClipboard(${promptId})"]`);
-
-                        if (data.is_docker) {
-                            // Docker 환경: 프롬프트 내용을 모달로 표시
-                            showPromptContentModal(data.content, data.message);
-                        } else {
-                            // 로컬 환경: 기존 복사 동작
-                            if (button) {
-                                const originalText = button.innerHTML;
-                                button.innerHTML = '<i class="fas fa-check"></i> 복사됨';
-                                button.style.background = 'var(--color-success-dark)';
-
-                                setTimeout(() => {
-                                    button.innerHTML = originalText;
-                                    button.style.background = 'var(--color-success)';
-                                }, 2000);
-                            }
-                        }
+                        displayPromptFullDetails(data.prompt);
                     } else {
-                        alert('복사 실패: ' + data.message);
+                        console.error('프롬프트 로드 실패:', data.message);
+                        alert('프롬프트를 로드할 수 없습니다.');
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('복사 중 오류가 발생했습니다.');
+                    alert('프롬프트를 로드하는 중 오류가 발생했습니다.');
                 });
         }
 
-                 // Show prompt content modal for Docker environment
-         function showPromptContentModal(content, message) {
-             // Remove existing modal if any
-             const existingModal = document.getElementById('prompt-content-modal');
-             if (existingModal) {
-                 existingModal.remove();
-             }
+        // 프롬프트 수정
+        function editPrompt(promptId) {
+            console.log('editPrompt called with promptId:', promptId);
 
-             // Create modal
-             const modal = document.createElement('div');
-             modal.id = 'prompt-content-modal';
-             modal.style.cssText = `
-                 position: fixed;
-                 top: 0;
-                 left: 0;
-                 width: 100%;
-                 height: 100%;
-                 background: rgba(0, 0, 0, 0.5);
-                 display: flex;
-                 justify-content: center;
-                 align-items: center;
-                 z-index: 1000;
-             `;
+            // API를 통해 프롬프트 정보 가져오기
+            fetch(`/api/prompt/${promptId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        displayEditForm(data.prompt);
+                    } else {
+                        console.error('프롬프트 로드 실패:', data.message);
+                        alert('프롬프트를 로드할 수 없습니다.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('프롬프트를 로드하는 중 오류가 발생했습니다.');
+                });
+        }
 
-             modal.innerHTML = `
-                 <div style="
-                     background: var(--glass-bg);
-                     backdrop-filter: var(--glass-backdrop);
-                     border: 1px solid var(--glass-border);
-                     border-radius: var(--radius-xl);
-                     padding: var(--spacing-6);
-                     max-width: 80%;
-                     max-height: 80%;
-                     overflow-y: auto;
-                     box-shadow: var(--shadow-xl);
-                 ">
-                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-4);">
-                         <h3 style="margin: 0; color: var(--color-text-primary);">프롬프트 내용</h3>
-                         <button onclick="this.closest('#prompt-content-modal').remove()" style="
-                             background: none;
-                             border: none;
-                             color: var(--color-text-muted);
-                             cursor: pointer;
-                             font-size: var(--font-size-xl);
-                         ">&times;</button>
-                     </div>
-                     <p style="color: var(--color-text-secondary); margin-bottom: var(--spacing-4);">${message}</p>
-                     <textarea id="prompt-content-textarea" readonly style="
-                         width: 100%;
-                         min-height: 300px;
-                         padding: var(--spacing-3);
-                         border: 1px solid var(--color-border);
-                         border-radius: var(--radius-lg);
-                         background: var(--color-bg);
-                         color: var(--color-text-primary);
-                         font-family: monospace;
-                         font-size: var(--font-size-sm);
-                         resize: vertical;
-                     ">${content}</textarea>
-                     <div style="margin-top: var(--spacing-4); text-align: center;">
-                         <button onclick="copyTextFromTextarea()" style="
-                             background: var(--color-primary);
-                             color: var(--color-white);
-                             border: none;
-                             padding: var(--spacing-2) var(--spacing-4);
-                             border-radius: var(--radius-lg);
-                             cursor: pointer;
-                             font-size: var(--font-size-sm);
-                         ">
-                             <i class="fas fa-copy"></i> 텍스트 복사
-                         </button>
-                     </div>
-                 </div>
-             `;
+        // 프롬프트 삭제
+        function deletePrompt(promptId) {
+            if (confirm('정말로 이 프롬프트를 삭제하시겠습니까?')) {
+                fetch(`/prompt/${promptId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // 그리드에서 해당 항목 제거
+                            const promptCard = document.querySelector(`[data-prompt-id="${promptId}"]`);
+                            if (promptCard) {
+                                promptCard.remove();
+                            }
 
-             document.body.appendChild(modal);
+                            // 우측 패널을 초기 상태로 되돌리기
+                            const rightPanel = document.querySelector('.right-panel');
+                            if (rightPanel) {
+                                rightPanel.innerHTML = `
+                                    <div class="panel-header">
+                                        <h2>프롬프트 상세</h2>
+                                    </div>
+                                    <div class="panel-content">
+                                        <div class="placeholder-content">
+                                            <div class="placeholder-icon">
+                                                <i class="fas fa-lightbulb"></i>
+                                            </div>
+                                            <h3>프롬프트를 선택하세요</h3>
+                                            <p>왼쪽 그리드에서 프롬프트를 선택하면 상세 내용을 볼 수 있습니다.</p>
+                                            <div class="placeholder-actions">
+                                                <button class="btn btn-primary" onclick="showNewPromptForm()">
+                                                    <i class="fas fa-plus"></i> 새 프롬프트
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                            }
 
-             // Close modal when clicking outside
-             modal.addEventListener('click', function (e) {
-                 if (e.target === modal) {
-                     modal.remove();
-                 }
-             });
-         }
+                            // 성공 메시지 표시
+                            alert('프롬프트가 삭제되었습니다.');
+                        } else {
+                            alert('삭제 중 오류가 발생했습니다: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('삭제 중 오류가 발생했습니다.');
+                    });
+            }
+        }
 
-         // Copy text from textarea to clipboard
-         function copyTextFromTextarea() {
-             const textarea = document.getElementById('prompt-content-textarea');
-             if (!textarea) {
-                 alert('텍스트 영역을 찾을 수 없습니다.');
-                 return;
-             }
+        // 프롬프트 내용 클립보드 복사
+        function copyPromptContent(content) {
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(content).then(() => {
+                    alert('클립보드에 복사되었습니다.');
+                }).catch(err => {
+                    console.error('클립보드 복사 실패:', err);
+                    // 대체 방법: 텍스트 영역 생성
+                    fallbackCopyTextToClipboard(content);
+                });
+            } else {
+                // 구형 브라우저 지원
+                fallbackCopyTextToClipboard(content);
+            }
+        }
 
-             const text = textarea.value;
-             copyTextToClipboard(text);
-         }
+        // 대체 클립보드 복사 방법
+        function fallbackCopyTextToClipboard(text) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            textArea.style.top = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
 
-        // Copy text to clipboard using browser API
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    alert('클립보드에 복사되었습니다.');
+                } else {
+                    alert('클립보드 복사에 실패했습니다.');
+                }
+            } catch (err) {
+                console.error('클립보드 복사 실패:', err);
+                alert('클립보드 복사에 실패했습니다.');
+            }
+
+            document.body.removeChild(textArea);
+        }
+
+        // 프롬프트 수정 폼 표시
+        function displayEditForm(prompt) {
+            console.log('displayEditForm called with prompt:', prompt);
+
+            const rightPanel = document.querySelector('.right-panel');
+
+            if (!rightPanel) {
+                console.error('Right panel not found');
+                return;
+            }
+
+            // 우측 패널 업데이트
+            rightPanel.innerHTML = `
+                <div class="panel-header">
+                    <h2>프롬프트 수정</h2>
+                    <div class="panel-actions">
+                        <button class="btn btn-primary" onclick="submitEditPrompt(${prompt.id})">
+                            <i class="fas fa-save"></i> 저장
+                        </button>
+                        <button class="btn btn-secondary" onclick="cancelEdit()">
+                            <i class="fas fa-times"></i> 취소
+                        </button>
+                    </div>
+                </div>
+                <div class="panel-content">
+                    <div class="prompt-edit-card">
+                        <form id="edit-prompt-form" style="display: flex; flex-direction: column; gap: var(--spacing-4);">
+                            <div>
+                                <label style="display: block; margin-bottom: var(--spacing-2); color: var(--color-text-primary);">
+                                    <span style="color: red;">*</span> 제목
+                                </label>
+                                <input type="text" name="title" required class="input-glass" style="width: 100%;" 
+                                       value="${prompt.title}" placeholder="프롬프트 제목을 입력하세요">
+                            </div>
+                            
+                            <div>
+                                <label style="display: block; margin-bottom: var(--spacing-2); color: var(--color-text-primary);">
+                                    카테고리
+                                </label>
+                                <select name="category" class="input-glass" style="width: 100%;">
+                                    <option value="">카테고리 선택</option>
+                                    <option value="일반" ${prompt.category === '일반' ? 'selected' : ''}>일반</option>
+                                    <option value="개발" ${prompt.category === '개발' ? 'selected' : ''}>개발</option>
+                                    <option value="문서작성" ${prompt.category === '문서작성' ? 'selected' : ''}>문서작성</option>
+                                    <option value="분석" ${prompt.category === '분석' ? 'selected' : ''}>분석</option>
+                                    <option value="번역" ${prompt.category === '번역' ? 'selected' : ''}>번역</option>
+                                    <option value="기타" ${prompt.category === '기타' ? 'selected' : ''}>기타</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label style="display: block; margin-bottom: var(--spacing-2); color: var(--color-text-primary);">
+                                    설명
+                                </label>
+                                <textarea name="description" class="input-glass" style="width: 100%; height: 100px;" 
+                                          placeholder="프롬프트에 대한 간단한 설명을 입력하세요">${prompt.description || ''}</textarea>
+                            </div>
+                            
+                            <div>
+                                <label style="display: block; margin-bottom: var(--spacing-2); color: var(--color-text-primary);">
+                                    <span style="color: red;">*</span> 내용
+                                </label>
+                                <textarea name="content" required class="input-glass" style="width: 100%; height: 300px;" 
+                                          placeholder="프롬프트 내용을 입력하세요">${prompt.content}</textarea>
+                            </div>
+                            
+                            <div>
+                                <label style="display: block; margin-bottom: var(--spacing-2); color: var(--color-text-primary);">
+                                    태그
+                                </label>
+                                <input type="text" name="tags" class="input-glass" style="width: 100%;" 
+                                       value="${prompt.tags || ''}" placeholder="태그1, 태그2, 태그3">
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+
+            console.log('Edit form displayed successfully');
+        }
+
+        // 새 프롬프트 폼 표시
+        function showNewPromptForm() {
+            const rightPanelContent = document.getElementById('right-panel-content');
+            const rightPanelTitle = document.getElementById('right-panel-title');
+            const rightPanelActions = document.getElementById('right-panel-actions');
+
+            // 요소들이 존재하는지 확인
+            if (!rightPanelContent || !rightPanelTitle || !rightPanelActions) {
+                console.error('Required elements not found:', {
+                    rightPanelContent: !!rightPanelContent,
+                    rightPanelTitle: !!rightPanelTitle,
+                    rightPanelActions: !!rightPanelActions
+                });
+
+                // 대안: right-panel을 직접 찾아서 업데이트
+                const rightPanel = document.querySelector('.right-panel');
+                if (rightPanel) {
+                    rightPanel.innerHTML = `
+                        <div class="panel-header">
+                            <h2 class="panel-title">
+                                <i class="fas fa-edit"></i>
+                                <span id="right-panel-title">새 프롬프트 등록</span>
+                            </h2>
+                            <div class="panel-actions" id="right-panel-actions">
+                                <button class="btn-glass btn-glass-primary" onclick="submitNewPrompt()">
+                                    <i class="fas fa-save"></i>
+                                    저장
+                                </button>
+                                <button class="btn-glass" onclick="cancelNewPrompt()">
+                                    <i class="fas fa-times"></i>
+                                    취소
+                                </button>
+                            </div>
+                        </div>
+                        <div class="right-panel-content" id="right-panel-content">
+                            <div class="fade-in">
+                                <form id="new-prompt-form" style="display: flex; flex-direction: column; gap: var(--spacing-4);">
+                                    <div>
+                                        <label style="display: block; margin-bottom: var(--spacing-2); color: var(--color-text-primary);">
+                                            <span style="color: red;">*</span> 제목
+                                        </label>
+                                        <input type="text" name="title" required class="input-glass" style="width: 100%;" placeholder="프롬프트 제목을 입력하세요">
+                                    </div>
+                                    
+                                    <div>
+                                        <label style="display: block; margin-bottom: var(--spacing-2); color: var(--color-text-primary);">
+                                            카테고리
+                                        </label>
+                                        <select name="category" class="input-glass" style="width: 100%;">
+                                            <option value="">카테고리 선택</option>
+                                            {% for category in categories or [] %}
+                                            <option value="{{ category.name }}">{{ category.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    
+                                    <div>
+                                        <label style="display: block; margin-bottom: var(--spacing-2); color: var(--color-text-primary);">
+                                            설명
+                                        </label>
+                                        <textarea name="description" class="input-glass" style="width: 100%; height: 100px;" placeholder="프롬프트에 대한 간단한 설명을 입력하세요"></textarea>
+                                    </div>
+                                    
+                                    <div>
+                                        <label style="display: block; margin-bottom: var(--spacing-2); color: var(--color-text-primary);">
+                                            <span style="color: red;">*</span> 내용
+                                        </label>
+                                        <textarea name="content" required class="input-glass" style="width: 100%; height: 300px;" placeholder="프롬프트 내용을 입력하세요"></textarea>
+                                    </div>
+                                    
+                                    <div>
+                                        <label style="display: block; margin-bottom: var(--spacing-2); color: var(--color-text-primary);">
+                                            태그
+                                        </label>
+                                        <input type="text" name="tags" class="input-glass" style="width: 100%;" placeholder="태그1, 태그2, 태그3">
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    console.error('Right panel not found');
+                    alert('페이지 요소를 찾을 수 없습니다. 페이지를 새로고침해주세요.');
+                }
+                return;
+            }
+
+            rightPanelTitle.textContent = '새 프롬프트 등록';
+            rightPanelActions.innerHTML = `
+                <button class="btn-glass btn-glass-primary" onclick="submitNewPrompt()">
+                    <i class="fas fa-save"></i>
+                    저장
+                </button>
+                <button class="btn-glass" onclick="cancelNewPrompt()">
+                    <i class="fas fa-times"></i>
+                    취소
+                </button>
+            `;
+
+            rightPanelContent.innerHTML = `
+                <div class="fade-in">
+                    <form id="new-prompt-form" style="display: flex; flex-direction: column; gap: var(--spacing-4);">
+                        <div>
+                            <label style="display: block; margin-bottom: var(--spacing-2); color: var(--color-text-primary);">
+                                <span style="color: red;">*</span> 제목
+                            </label>
+                            <input type="text" name="title" required class="input-glass" style="width: 100%;" placeholder="프롬프트 제목을 입력하세요">
+                        </div>
+                        
+                        <div>
+                            <label style="display: block; margin-bottom: var(--spacing-2); color: var(--color-text-primary);">
+                                카테고리
+                            </label>
+                            <select name="category" class="input-glass" style="width: 100%;">
+                                <option value="">카테고리 선택</option>
+                                {% for category in categories or [] %}
+                                <option value="{{ category.name }}">{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label style="display: block; margin-bottom: var(--spacing-2); color: var(--color-text-primary);">
+                                설명
+                            </label>
+                            <textarea name="description" class="input-glass" style="width: 100%; height: 100px;" placeholder="프롬프트에 대한 간단한 설명을 입력하세요"></textarea>
+                        </div>
+                        
+                        <div>
+                            <label style="display: block; margin-bottom: var(--spacing-2); color: var(--color-text-primary);">
+                                <span style="color: red;">*</span> 내용
+                            </label>
+                            <textarea name="content" required class="input-glass" style="width: 100%; height: 300px;" placeholder="프롬프트 내용을 입력하세요"></textarea>
+                        </div>
+                        
+                        <div>
+                            <label style="display: block; margin-bottom: var(--spacing-2); color: var(--color-text-primary);">
+                                태그
+                            </label>
+                            <input type="text" name="tags" class="input-glass" style="width: 100%;" placeholder="태그1, 태그2, 태그3">
+                        </div>
+                    </form>
+                </div>
+            `;
+        }
+
+        // 프롬프트 수정 제출
+        function submitEditPrompt(promptId) {
+            const form = document.getElementById('edit-prompt-form');
+            const formData = new FormData(form);
+
+            fetch(`/prompt/${promptId}/edit`, {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    } else {
+                        throw new Error('수정 요청 실패');
+                    }
+                })
+                .then(data => {
+                    if (data.success) {
+                        alert('프롬프트가 성공적으로 수정되었습니다.');
+                        // 수정된 프롬프트 상세 정보 다시 표시
+                        viewPrompt(promptId);
+                    } else {
+                        alert('수정 중 오류가 발생했습니다: ' + (data.message || '알 수 없는 오류'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('수정 중 오류가 발생했습니다.');
+                });
+        }
+
+        // 수정 취소
+        function cancelEdit() {
+            if (window.selectedPromptId) {
+                // 선택된 프롬프트 상세 정보로 돌아가기
+                viewPrompt(window.selectedPromptId);
+            } else {
+                // 기본 플레이스홀더로 돌아가기
+                const rightPanel = document.querySelector('.right-panel');
+                if (rightPanel) {
+                    rightPanel.innerHTML = `
+                        <div class="panel-header">
+                            <h2 class="panel-title">
+                                <i class="fas fa-edit"></i>
+                                <span id="right-panel-title">프롬프트 상세</span>
+                            </h2>
+                            <div class="panel-actions" id="right-panel-actions">
+                                <!-- 동적으로 버튼들이 추가됩니다 -->
+                            </div>
+                        </div>
+                        <div class="right-panel-content" id="right-panel-content">
+                            <!-- 기본 플레이스홀더 -->
+                            <div class="right-panel-placeholder">
+                                <i class="fas fa-hand-pointer"></i>
+                                <h3>프롬프트를 선택하세요</h3>
+                                <p>좌측 목록에서 프롬프트를 선택하면 상세 정보를 확인할 수 있습니다.</p>
+                                <div class="placeholder-actions">
+                                    <button class="btn btn-primary" onclick="showNewPromptForm()">
+                                        <i class="fas fa-plus"></i> 새 프롬프트
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        // 새 프롬프트 제출
+        function submitNewPrompt() {
+            const form = document.getElementById('new-prompt-form');
+            const formData = new FormData(form);
+
+            fetch('/prompt/new', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('서버 응답 오류');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        alert('프롬프트가 성공적으로 등록되었습니다.');
+                        // 우측 패널을 초기 상태로 되돌리기
+                        cancelNewPrompt();
+                        // 페이지 새로고침 대신 그리드 새로고침 (선택사항)
+                        // window.location.reload();
+                    } else {
+                        alert('등록 중 오류가 발생했습니다: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('등록 중 오류가 발생했습니다. 서버 응답을 확인할 수 없습니다.');
+                });
+        }
+
+        // 새 프롬프트 취소
+        function cancelNewPrompt() {
+            const rightPanelContent = document.getElementById('right-panel-content');
+            const rightPanelTitle = document.getElementById('right-panel-title');
+            const rightPanelActions = document.getElementById('right-panel-actions');
+
+            // 요소들이 존재하는지 확인
+            if (!rightPanelContent || !rightPanelTitle || !rightPanelActions) {
+                console.error('Required elements not found in cancelNewPrompt');
+
+                // 대안: right-panel을 직접 찾아서 업데이트
+                const rightPanel = document.querySelector('.right-panel');
+                if (rightPanel) {
+                    rightPanel.innerHTML = `
+                        <div class="panel-header">
+                            <h2 class="panel-title">
+                                <i class="fas fa-edit"></i>
+                                <span id="right-panel-title">프롬프트 상세</span>
+                            </h2>
+                            <div class="panel-actions" id="right-panel-actions">
+                                <!-- 동적으로 버튼들이 추가됩니다 -->
+                            </div>
+                        </div>
+                        <div class="right-panel-content" id="right-panel-content">
+                            <div class="right-panel-placeholder">
+                                <i class="fas fa-hand-pointer"></i>
+                                <h3>프롬프트를 선택하세요</h3>
+                                <p>좌측 목록에서 프롬프트를 선택하면 상세 정보를 확인할 수 있습니다.</p>
+                                <div class="placeholder-actions">
+                                    <button class="btn btn-primary" onclick="showNewPromptForm()">
+                                        <i class="fas fa-plus"></i> 새 프롬프트
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    console.error('Right panel not found in cancelNewPrompt');
+                    alert('페이지 요소를 찾을 수 없습니다. 페이지를 새로고침해주세요.');
+                }
+                return;
+            }
+
+            rightPanelTitle.textContent = '프롬프트 상세';
+            rightPanelActions.innerHTML = '';
+
+            rightPanelContent.innerHTML = `
+                <div class="right-panel-placeholder">
+                    <i class="fas fa-hand-pointer"></i>
+                    <h3>프롬프트를 선택하세요</h3>
+                    <p>좌측 목록에서 프롬프트를 선택하면 상세 정보를 확인할 수 있습니다.</p>
+                    <div class="placeholder-actions">
+                        <button class="btn btn-primary" onclick="showNewPromptForm()">
+                            <i class="fas fa-plus"></i> 새 프롬프트
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 클립보드 복사 함수
+        function copyToClipboard(promptId, buttonElement) {
+            const button = buttonElement;
+            const originalText = button.innerHTML;
+
+            // 로딩 상태 표시
+            button.innerHTML = '<div class="loading-spinner"></div> 복사 중...';
+            button.disabled = true;
+
+            fetch(`/copy_prompt/${promptId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Docker 환경에서는 모달로 텍스트 표시
+                        if (data.is_docker) {
+                            showCopyModal(data.content, data.message);
+                        } else {
+                            // 로컬 환경에서는 성공 메시지
+                            button.innerHTML = '<i class="fas fa-check"></i> 복사됨!';
+                            setTimeout(() => {
+                                button.innerHTML = originalText;
+                                button.disabled = false;
+                            }, 2000);
+                        }
+                    } else {
+                        button.innerHTML = '<i class="fas fa-exclamation-triangle"></i> 오류!';
+                        setTimeout(() => {
+                            button.innerHTML = originalText;
+                            button.disabled = false;
+                        }, 2000);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    button.innerHTML = '<i class="fas fa-exclamation-triangle"></i> 오류!';
+                    setTimeout(() => {
+                        button.innerHTML = originalText;
+                        button.disabled = false;
+                    }, 2000);
+                });
+        }
+
+        // 복사 모달 표시 (Docker 환경용)
+        function showCopyModal(content, message) {
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.5);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 1000;
+            `;
+
+            modal.innerHTML = `
+                <div style="
+                    background: var(--glass-bg);
+                    backdrop-filter: var(--glass-backdrop);
+                    border: 1px solid var(--glass-border);
+                    border-radius: var(--radius-3xl);
+                    padding: var(--spacing-6);
+                    max-width: 600px;
+                    width: 90%;
+                    max-height: 80vh;
+                    overflow-y: auto;
+                    box-shadow: var(--shadow-xl);
+                ">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-4);">
+                        <h3 style="margin: 0; color: var(--color-text-primary);">${message}</h3>
+                        <button onclick="this.closest('.modal').remove()" style="
+                            background: none;
+                            border: none;
+                            font-size: var(--font-size-xl);
+                            color: var(--color-text-muted);
+                            cursor: pointer;
+                            padding: var(--spacing-1);
+                        ">&times;</button>
+                    </div>
+                    <div style="margin-bottom: var(--spacing-4);">
+                        <textarea readonly style="
+                            width: 100%;
+                            height: 200px;
+                            padding: var(--spacing-3);
+                            border: 1px solid var(--glass-border);
+                            border-radius: var(--radius-lg);
+                            background: var(--color-bg-primary);
+                            color: var(--color-text-primary);
+                            font-family: inherit;
+                            resize: vertical;
+                        ">${content}</textarea>
+                    </div>
+                    <div style="display: flex; gap: var(--spacing-3); justify-content: flex-end;">
+                        <button onclick="copyTextToClipboard('${content.replace(/'/g, "\\'")}')" class="btn-glass btn-glass-primary">
+                            <i class="fas fa-copy"></i>
+                            텍스트 복사
+                        </button>
+                        <button onclick="this.closest('.modal').remove()" class="btn-glass">
+                            닫기
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            modal.classList.add('modal');
+            document.body.appendChild(modal);
+
+            // 원래 버튼 상태 복원
+            const button = document.querySelector(`[onclick*="copyToClipboard(${promptId}"]`);
+            if (button) {
+                button.innerHTML = originalText;
+                button.disabled = false;
+            }
+        }
+
+        // 브라우저 클립보드 API로 텍스트 복사
         function copyTextToClipboard(text) {
             if (navigator.clipboard && window.isSecureContext) {
                 navigator.clipboard.writeText(text).then(() => {
-                    alert('텍스트가 클립보드에 복사되었습니다.');
+                    alert('텍스트가 클립보드에 복사되었습니다!');
                 }).catch(err => {
                     console.error('클립보드 복사 실패:', err);
-                    alert('클립보드 복사에 실패했습니다. 텍스트를 수동으로 선택하여 복사해주세요.');
+                    alert('클립보드 복사에 실패했습니다. 수동으로 복사해주세요.');
                 });
             } else {
-                // Fallback for older browsers
+                // fallback for older browsers
                 const textArea = document.createElement('textarea');
                 textArea.value = text;
                 textArea.style.position = 'fixed';
@@ -473,52 +1346,260 @@
 
                 try {
                     document.execCommand('copy');
-                    alert('텍스트가 클립보드에 복사되었습니다.');
+                    alert('텍스트가 클립보드에 복사되었습니다!');
                 } catch (err) {
                     console.error('클립보드 복사 실패:', err);
-                    alert('클립보드 복사에 실패했습니다. 텍스트를 수동으로 선택하여 복사해주세요.');
+                    alert('클립보드 복사에 실패했습니다. 수동으로 복사해주세요.');
                 }
 
                 document.body.removeChild(textArea);
             }
         }
 
-        // Confirm delete
-        function confirmDelete(url, message) {
-            if (confirm(message || '정말 삭제하시겠습니까?')) {
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = url;
-                document.body.appendChild(form);
-                form.submit();
+        // 오류 표시
+        function showError(message) {
+            const rightPanelContent = document.getElementById('right-panel-content');
+            rightPanelContent.innerHTML = `
+                <div class="right-panel-placeholder">
+                    <i class="fas fa-exclamation-triangle" style="color: var(--color-danger);"></i>
+                    <h3>오류 발생</h3>
+                    <p>${message}</p>
+                </div>
+            `;
+        }
+
+        // 디버깅: 그리드 레이아웃 확인
+        function debugGridLayout() {
+            console.log('=== 그리드 레이아웃 디버깅 ===');
+
+            const grid = document.querySelector('.prompt-grid');
+            const cells = document.querySelectorAll('.prompt-grid-cell');
+
+            if (grid) {
+                const gridStyle = window.getComputedStyle(grid);
+                console.log('Grid display:', gridStyle.display);
+                console.log('Grid template columns:', gridStyle.gridTemplateColumns);
+                console.log('Grid gap:', gridStyle.gap);
+            }
+
+            if (cells.length > 0) {
+                const cellStyle = window.getComputedStyle(cells[0]);
+                console.log('Cell display:', cellStyle.display);
+                console.log('Cell grid template columns:', cellStyle.gridTemplateColumns);
+                console.log('Cell grid column:', cellStyle.gridColumn);
+
+                // 각 컬럼 확인
+                const titleCell = cells[0].querySelector('.prompt-title-cell');
+                const categoryCell = cells[0].querySelector('.prompt-category-cell');
+                const dateCell = cells[0].querySelector('.prompt-date-cell');
+
+                if (titleCell) console.log('Title cell grid-column:', window.getComputedStyle(titleCell).gridColumn);
+                if (categoryCell) console.log('Category cell grid-column:', window.getComputedStyle(categoryCell).gridColumn);
+                if (dateCell) console.log('Date cell grid-column:', window.getComputedStyle(dateCell).gridColumn);
             }
         }
 
-        // Search form auto-submit
+        // 페이지 로드 후 디버깅 실행
         document.addEventListener('DOMContentLoaded', function () {
-            const searchInput = document.querySelector('.search-input');
-            const categoryFilter = document.querySelector('.category-filter');
-
-            if (searchInput) {
-                let timeout;
-                searchInput.addEventListener('input', function () {
-                    clearTimeout(timeout);
-                    timeout = setTimeout(() => {
-                        this.closest('form').submit();
-                    }, 500);
-                });
-            }
-
-            if (categoryFilter) {
-                categoryFilter.addEventListener('change', function () {
-                    this.closest('form').submit();
-                });
-            }
+            setTimeout(debugGridLayout, 1000);
         });
-    </script>
 
-    <!-- PWA Scripts -->
-    <script src="{{ url_for('serve_static', filename='pwa.js') }}"></script>
+        // 카테고리 관리 모달 표시
+        function showCategoryModal() {
+            // 기존 모달이 있다면 제거
+            const existingModal = document.querySelector('.category-modal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+
+            // 모달 HTML 생성
+            const modal = document.createElement('div');
+            modal.className = 'category-modal';
+            modal.innerHTML = `
+                <div class="modal-overlay">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3><i class="fas fa-tags"></i> 카테고리 관리</h3>
+                            <button class="category-modal-close" onclick="closeCategoryModal()" title="닫기">
+                                ×
+                            </button>
+                        </div>
+                        
+                        <div class="modal-body">
+                            <!-- 새 카테고리 추가 폼 -->
+                            <div class="category-form-section">
+                                <h4>새 카테고리 추가</h4>
+                                <form id="new-category-form" class="category-form">
+                                    <div class="form-group">
+                                        <label for="category-name">카테고리 이름</label>
+                                        <input type="text" id="category-name" name="name" required 
+                                               placeholder="카테고리 이름을 입력하세요" class="input-glass">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="category-color">색상</label>
+                                        <input type="color" id="category-color" name="color" 
+                                               value="#6366f1" class="input-glass">
+                                    </div>
+                                    <button type="submit" class="btn-glass btn-glass-primary">
+                                        <i class="fas fa-plus"></i> 추가
+                                    </button>
+                                </form>
+                            </div>
+
+                            <!-- 카테고리 목록 -->
+                            <div class="category-list-section">
+                                <h4>현재 카테고리 목록</h4>
+                                <div id="category-list" class="category-list">
+                                    <div class="loading">카테고리를 불러오는 중...</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+
+            // 카테고리 목록 로드
+            loadCategories();
+
+            // 폼 제출 이벤트 리스너 추가
+            document.getElementById('new-category-form').addEventListener('submit', handleNewCategory);
+        }
+
+        // 카테고리 모달 닫기
+        function closeCategoryModal() {
+            const modal = document.querySelector('.category-modal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        // 카테고리 목록 로드
+        function loadCategories() {
+            fetch('/api/categories')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        displayCategories(data.categories);
+                    } else {
+                        showCategoryError('카테고리 목록을 불러오는 중 오류가 발생했습니다: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showCategoryError('카테고리 목록을 불러오는 중 오류가 발생했습니다.');
+                });
+        }
+
+        // 카테고리 목록 표시
+        function displayCategories(categories) {
+            const categoryList = document.getElementById('category-list');
+
+            if (categories.length === 0) {
+                categoryList.innerHTML = `
+                    <div class="empty-categories">
+                        <i class="fas fa-inbox"></i>
+                        <p>등록된 카테고리가 없습니다.</p>
+                        <p>새 카테고리를 추가해보세요!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const categoriesHtml = categories.map(category => `
+                <div class="category-item" data-category-id="${category.id}">
+                    <div class="category-info">
+                        <span class="category-color" style="background-color: ${category.color}"></span>
+                        <span class="category-name">${category.name}</span>
+                        <span class="category-date">${category.created_at ? category.created_at.split(' ')[0] : ''}</span>
+                    </div>
+                    <div class="category-actions">
+                        <button class="btn-glass btn-glass-danger" onclick="deleteCategory(${category.id}, '${category.name}')">
+                            <i class="fas fa-trash"></i> 삭제
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+            categoryList.innerHTML = categoriesHtml;
+        }
+
+        // 새 카테고리 추가 처리
+        function handleNewCategory(event) {
+            event.preventDefault();
+
+            const form = event.target;
+            const formData = new FormData(form);
+            const name = formData.get('name');
+            const color = formData.get('color');
+
+            if (!name.trim()) {
+                alert('카테고리 이름을 입력해주세요.');
+                return;
+            }
+
+            fetch('/api/category/new', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ name: name.trim(), color: color })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('카테고리가 추가되었습니다.');
+                        form.reset();
+                        loadCategories(); // 목록 새로고침
+                    } else {
+                        alert('카테고리 추가 중 오류가 발생했습니다: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('카테고리 추가 중 오류가 발생했습니다.');
+                });
+        }
+
+        // 카테고리 삭제
+        function deleteCategory(categoryId, categoryName) {
+            if (confirm(`정말로 '${categoryName}' 카테고리를 삭제하시겠습니까?`)) {
+                fetch(`/api/category/${categoryId}/delete`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('카테고리가 삭제되었습니다.');
+                            loadCategories(); // 목록 새로고침
+                        } else {
+                            alert('카테고리 삭제 중 오류가 발생했습니다: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('카테고리 삭제 중 오류가 발생했습니다.');
+                    });
+            }
+        }
+
+        // 카테고리 오류 표시
+        function showCategoryError(message) {
+            const categoryList = document.getElementById('category-list');
+            if (categoryList) {
+                categoryList.innerHTML = `
+                    <div class="category-error">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>${message}</p>
+                    </div>
+                `;
+            }
+        }
+    </script>
 </body>
 
 </html>

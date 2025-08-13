@@ -1,0 +1,535 @@
+/* =========================================
+   Card Styles - 카드 컴포넌트 스타일
+   프로그램 정보 관리 시스템
+   ========================================= */
+
+/* Base Card */
+.card {
+  --card-spacer-y: var(--spacing-4);
+  --card-spacer-x: var(--spacing-4);
+  --card-title-spacer-y: var(--spacing-2);
+  --card-title-color: var(--color-text-primary);
+  --card-subtitle-color: var(--color-text-muted);
+  --card-border-width: 1px;
+  --card-border-color: var(--color-border);
+  --card-border-radius: var(--radius-lg);
+  --card-box-shadow: var(--shadow-sm);
+  --card-inner-border-radius: calc(var(--card-border-radius) - var(--card-border-width));
+  --card-cap-padding-y: var(--spacing-3);
+  --card-cap-padding-x: var(--card-spacer-x);
+  --card-cap-bg: var(--color-bg-secondary);
+  --card-cap-color: var(--color-text-primary);
+  --card-height: auto;
+  --card-color: var(--color-text-primary);
+  --card-bg: var(--color-bg-primary);
+  --card-img-overlay-padding: var(--spacing-4);
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  height: var(--card-height);
+  word-wrap: break-word;
+  background-color: var(--card-bg);
+  background-clip: border-box;
+  border: var(--card-border-width) solid var(--card-border-color);
+  border-radius: var(--card-border-radius);
+  box-shadow: var(--card-box-shadow);
+}
+
+.card > hr {
+  margin-right: 0;
+  margin-left: 0;
+}
+
+.card > .list-group {
+  border-top: inherit;
+  border-bottom: inherit;
+}
+
+.card > .list-group:first-child {
+  border-top-width: 0;
+  border-top-left-radius: var(--card-inner-border-radius);
+  border-top-right-radius: var(--card-inner-border-radius);
+}
+
+.card > .list-group:last-child {
+  border-bottom-width: 0;
+  border-bottom-right-radius: var(--card-inner-border-radius);
+  border-bottom-left-radius: var(--card-inner-border-radius);
+}
+
+.card > .card-header + .list-group,
+.card > .list-group + .card-footer {
+  border-top: 0;
+}
+
+/* Card Body */
+.card-body {
+  flex: 1 1 auto;
+  padding: var(--card-spacer-y) var(--card-spacer-x);
+  color: var(--card-color);
+}
+
+/* Card Title */
+.card-title {
+  margin-bottom: var(--card-title-spacer-y);
+  color: var(--card-title-color);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-tight);
+}
+
+/* Card Subtitle */
+.card-subtitle {
+  margin-top: calc(-0.5 * var(--card-title-spacer-y));
+  margin-bottom: 0;
+  color: var(--card-subtitle-color);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-normal);
+}
+
+/* Card Text */
+.card-text:last-child {
+  margin-bottom: 0;
+}
+
+/* Card Link */
+.card-link {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.card-link:hover,
+.card-link:focus {
+  color: var(--color-primary-dark);
+  text-decoration: underline;
+}
+
+.card-link + .card-link {
+  margin-left: var(--card-spacer-x);
+}
+
+/* Card Header */
+.card-header {
+  padding: var(--card-cap-padding-y) var(--card-cap-padding-x);
+  margin-bottom: 0;
+  color: var(--card-cap-color);
+  background-color: var(--card-cap-bg);
+  border-bottom: var(--card-border-width) solid var(--card-border-color);
+  border-top-left-radius: var(--card-inner-border-radius);
+  border-top-right-radius: var(--card-inner-border-radius);
+  font-weight: var(--font-weight-medium);
+}
+
+.card-header:first-child {
+  border-radius: var(--card-border-radius) var(--card-border-radius) 0 0;
+}
+
+/* Card Footer */
+.card-footer {
+  padding: var(--card-cap-padding-y) var(--card-cap-padding-x);
+  color: var(--card-cap-color);
+  background-color: var(--card-cap-bg);
+  border-top: var(--card-border-width) solid var(--card-border-color);
+  border-bottom-right-radius: var(--card-inner-border-radius);
+  border-bottom-left-radius: var(--card-inner-border-radius);
+}
+
+.card-footer:last-child {
+  border-radius: 0 0 var(--card-border-radius) var(--card-border-radius);
+}
+
+/* Card Image */
+.card-img {
+  width: 100%;
+  border-radius: var(--card-inner-border-radius);
+}
+
+.card-img-top {
+  width: 100%;
+  border-top-left-radius: var(--card-inner-border-radius);
+  border-top-right-radius: var(--card-inner-border-radius);
+}
+
+.card-img-bottom {
+  width: 100%;
+  border-bottom-right-radius: var(--card-inner-border-radius);
+  border-bottom-left-radius: var(--card-inner-border-radius);
+}
+
+/* Card Image Overlay */
+.card-img-overlay {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  padding: var(--card-img-overlay-padding);
+  border-radius: var(--card-inner-border-radius);
+  background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.8) 100%);
+  color: var(--color-white);
+}
+
+.card-img-overlay .card-title,
+.card-img-overlay .card-subtitle {
+  color: var(--color-white);
+}
+
+/* Card Variants */
+
+/* Primary Card */
+.card-primary {
+  --card-bg: var(--color-primary);
+  --card-color: var(--color-text-inverse);
+  --card-border-color: var(--color-primary-dark);
+  --card-cap-bg: rgba(255, 255, 255, 0.1);
+  --card-cap-color: var(--color-text-inverse);
+  --card-title-color: var(--color-text-inverse);
+  --card-subtitle-color: rgba(255, 255, 255, 0.7);
+}
+
+/* Secondary Card */
+.card-secondary {
+  --card-bg: var(--color-secondary);
+  --card-color: var(--color-text-inverse);
+  --card-border-color: var(--color-secondary-dark);
+  --card-cap-bg: rgba(255, 255, 255, 0.1);
+  --card-cap-color: var(--color-text-inverse);
+  --card-title-color: var(--color-text-inverse);
+  --card-subtitle-color: rgba(255, 255, 255, 0.7);
+}
+
+/* Success Card */
+.card-success {
+  --card-bg: var(--color-success);
+  --card-color: var(--color-text-inverse);
+  --card-border-color: var(--color-success-dark);
+  --card-cap-bg: rgba(255, 255, 255, 0.1);
+  --card-cap-color: var(--color-text-inverse);
+  --card-title-color: var(--color-text-inverse);
+  --card-subtitle-color: rgba(255, 255, 255, 0.7);
+}
+
+/* Warning Card */
+.card-warning {
+  --card-bg: var(--color-warning);
+  --card-color: var(--color-gray-900);
+  --card-border-color: var(--color-warning-dark);
+  --card-cap-bg: rgba(0, 0, 0, 0.1);
+  --card-cap-color: var(--color-gray-900);
+  --card-title-color: var(--color-gray-900);
+  --card-subtitle-color: rgba(0, 0, 0, 0.7);
+}
+
+/* Danger Card */
+.card-danger {
+  --card-bg: var(--color-danger);
+  --card-color: var(--color-text-inverse);
+  --card-border-color: var(--color-danger-dark);
+  --card-cap-bg: rgba(255, 255, 255, 0.1);
+  --card-cap-color: var(--color-text-inverse);
+  --card-title-color: var(--color-text-inverse);
+  --card-subtitle-color: rgba(255, 255, 255, 0.7);
+}
+
+/* Info Card */
+.card-info {
+  --card-bg: var(--color-info);
+  --card-color: var(--color-text-inverse);
+  --card-border-color: var(--color-info-dark);
+  --card-cap-bg: rgba(255, 255, 255, 0.1);
+  --card-cap-color: var(--color-text-inverse);
+  --card-title-color: var(--color-text-inverse);
+  --card-subtitle-color: rgba(255, 255, 255, 0.7);
+}
+
+/* Outline Cards */
+.card-outline-primary {
+  --card-border-color: var(--color-primary);
+  border-width: 2px;
+}
+
+.card-outline-secondary {
+  --card-border-color: var(--color-secondary);
+  border-width: 2px;
+}
+
+.card-outline-success {
+  --card-border-color: var(--color-success);
+  border-width: 2px;
+}
+
+.card-outline-warning {
+  --card-border-color: var(--color-warning);
+  border-width: 2px;
+}
+
+.card-outline-danger {
+  --card-border-color: var(--color-danger);
+  border-width: 2px;
+}
+
+.card-outline-info {
+  --card-border-color: var(--color-info);
+  border-width: 2px;
+}
+
+/* Card Sizes */
+
+/* Small Card */
+.card-sm {
+  --card-spacer-y: var(--spacing-3);
+  --card-spacer-x: var(--spacing-3);
+  --card-cap-padding-y: var(--spacing-2);
+  --card-cap-padding-x: var(--spacing-3);
+}
+
+.card-sm .card-title {
+  font-size: var(--font-size-base);
+}
+
+/* Large Card */
+.card-lg {
+  --card-spacer-y: var(--spacing-6);
+  --card-spacer-x: var(--spacing-6);
+  --card-cap-padding-y: var(--spacing-4);
+  --card-cap-padding-x: var(--spacing-6);
+}
+
+.card-lg .card-title {
+  font-size: var(--font-size-xl);
+}
+
+/* Card States */
+
+/* Hoverable Card */
+.card-hoverable {
+  transition: transform var(--transition-base),
+              box-shadow var(--transition-base);
+  cursor: pointer;
+}
+
+.card-hoverable:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Clickable Card */
+.card-clickable {
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.card-clickable:hover {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.card-clickable:active {
+  transform: scale(0.98);
+}
+
+/* Loading Card */
+.card-loading {
+  position: relative;
+  overflow: hidden;
+}
+
+.card-loading::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.4) 50%,
+    transparent 100%
+  );
+  animation: card-shimmer 1.5s infinite;
+}
+
+@keyframes card-shimmer {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+/* Card Groups */
+.card-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.card-group > .card {
+  margin-bottom: var(--spacing-4);
+}
+
+@media (min-width: 576px) {
+  .card-group {
+    flex-flow: row wrap;
+  }
+  
+  .card-group > .card {
+    flex: 1 0 0%;
+    margin-bottom: 0;
+  }
+  
+  .card-group > .card + .card {
+    margin-left: 0;
+    border-left: 0;
+  }
+  
+  .card-group > .card:not(:last-child) {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+  
+  .card-group > .card:not(:first-child) {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+  }
+}
+
+/* Card Deck */
+.card-deck {
+  display: flex;
+  flex-direction: column;
+}
+
+.card-deck .card {
+  margin-bottom: var(--spacing-4);
+}
+
+@media (min-width: 576px) {
+  .card-deck {
+    flex-flow: row wrap;
+    margin-right: calc(-0.5 * var(--spacing-4));
+    margin-left: calc(-0.5 * var(--spacing-4));
+  }
+  
+  .card-deck .card {
+    flex: 1 0 0%;
+    margin-right: calc(0.5 * var(--spacing-4));
+    margin-bottom: 0;
+    margin-left: calc(0.5 * var(--spacing-4));
+  }
+}
+
+/* Card Columns */
+.card-columns {
+  column-count: 3;
+  column-gap: var(--spacing-4);
+  orphans: 1;
+  widows: 1;
+}
+
+.card-columns .card {
+  display: inline-block;
+  margin-bottom: var(--spacing-4);
+  width: 100%;
+}
+
+@media (max-width: 767.98px) {
+  .card-columns {
+    column-count: 1;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 991.98px) {
+  .card-columns {
+    column-count: 2;
+  }
+}
+
+/* Card with Actions */
+.card-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  margin-top: var(--spacing-4);
+  padding-top: var(--spacing-4);
+  border-top: 1px solid var(--color-border-light);
+}
+
+.card-actions .btn {
+  font-size: var(--font-size-sm);
+}
+
+/* Card with Badge */
+.card-badge {
+  position: absolute;
+  top: var(--spacing-2);
+  right: var(--spacing-2);
+  z-index: 10;
+}
+
+/* Card Statistics */
+.card-stat {
+  text-align: center;
+  padding: var(--spacing-6) var(--spacing-4);
+}
+
+.card-stat-value {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  line-height: 1;
+  margin-bottom: var(--spacing-2);
+  color: var(--color-primary);
+}
+
+.card-stat-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.card-stat-change {
+  font-size: var(--font-size-xs);
+  margin-top: var(--spacing-1);
+}
+
+.card-stat-change.positive {
+  color: var(--color-success);
+}
+
+.card-stat-change.negative {
+  color: var(--color-danger);
+}
+
+/* Responsive Cards */
+@media (max-width: 576px) {
+  .card {
+    --card-spacer-y: var(--spacing-3);
+    --card-spacer-x: var(--spacing-3);
+  }
+  
+  .card-title {
+    font-size: var(--font-size-base);
+  }
+  
+  .card-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .card-actions .btn {
+    width: 100%;
+    margin-bottom: var(--spacing-2);
+  }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  .card {
+    --card-bg: var(--color-gray-800);
+    --card-border-color: var(--color-gray-700);
+    --card-cap-bg: var(--color-gray-700);
+    --card-color: var(--color-white);
+    --card-title-color: var(--color-white);
+    --card-cap-color: var(--color-white);
+  }
+} 

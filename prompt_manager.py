@@ -24,8 +24,8 @@ def serve_css(filename):
         # Docker 환경
         external_style_path = os.environ.get('COMMON_STYLE_PATH')
     else:
-        # 로컬 환경
-        external_style_path = r'C:\cursorai_working\common_style'
+        # 로컬 환경 - 현재 프로젝트 폴더의 common_style 사용
+        external_style_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'common_style')
     
     print(f"CSS 요청: {filename}")
     print(f"CSS 경로: {external_style_path}")
@@ -170,20 +170,22 @@ def new_prompt():
         tags = request.form.get('tags', '')
         
         if not title or not content or not category:
-            flash('제목, 내용, 카테고리는 필수입니다.', 'error')
-            return redirect(url_for('new_prompt'))
+            return jsonify({'success': False, 'message': '제목, 내용, 카테고리는 필수입니다.'})
         
-        conn = get_db_connection()
-        conn.execute('''
-            INSERT INTO prompts (title, content, category, description, tags)
-            VALUES (?, ?, ?, ?, ?)
-        ''', (title, content, category, description, tags))
-        conn.commit()
-        conn.close()
-        
-        flash('프롬프트가 성공적으로 등록되었습니다.', 'success')
-        return redirect(url_for('index'))
+        try:
+            conn = get_db_connection()
+            conn.execute('''
+                INSERT INTO prompts (title, content, category, description, tags)
+                VALUES (?, ?, ?, ?, ?)
+            ''', (title, content, category, description, tags))
+            conn.commit()
+            conn.close()
+            
+            return jsonify({'success': True, 'message': '프롬프트가 성공적으로 등록되었습니다.'})
+        except Exception as e:
+            return jsonify({'success': False, 'message': f'등록 중 오류가 발생했습니다: {str(e)}'})
     
+    # GET 요청은 기존 템플릿 렌더링 (하위 호환성)
     conn = get_db_connection()
     categories = conn.execute('SELECT * FROM categories ORDER BY name').fetchall()
     conn.close()
@@ -221,20 +223,23 @@ def edit_prompt(id):
         tags = request.form.get('tags', '')
         
         if not title or not content or not category:
-            flash('제목, 내용, 카테고리는 필수입니다.', 'error')
-            return redirect(url_for('edit_prompt', id=id))
+            return jsonify({'success': False, 'message': '제목, 내용, 카테고리는 필수입니다.'})
         
-        conn.execute('''
-            UPDATE prompts 
-            SET title = ?, content = ?, category = ?, description = ?, tags = ?, updated_at = CURRENT_TIMESTAMP
-            WHERE id = ?
-        ''', (title, content, category, description, tags, id))
-        conn.commit()
-        conn.close()
-        
-        flash('프롬프트가 성공적으로 수정되었습니다.', 'success')
-        return redirect(url_for('view_prompt', id=id))
+        try:
+            conn.execute('''
+                UPDATE prompts 
+                SET title = ?, content = ?, category = ?, description = ?, tags = ?, updated_at = CURRENT_TIMESTAMP
+                WHERE id = ?
+            ''', (title, content, category, description, tags, id))
+            conn.commit()
+            conn.close()
+            
+            return jsonify({'success': True, 'message': '프롬프트가 성공적으로 수정되었습니다.'})
+        except Exception as e:
+            conn.close()
+            return jsonify({'success': False, 'message': f'수정 중 오류가 발생했습니다: {str(e)}'})
     
+    # GET 요청은 기존 템플릿 렌더링 (하위 호환성)
     prompt = conn.execute('SELECT * FROM prompts WHERE id = ?', (id,)).fetchone()
     categories = conn.execute('SELECT * FROM categories ORDER BY name').fetchall()
     conn.close()
@@ -247,7 +252,7 @@ def edit_prompt(id):
 
 @app.route('/prompt/<int:id>/delete', methods=['POST'])
 def delete_prompt(id):
-    """프롬프트 삭제"""
+    """프롬프트 삭제 (POST 메서드 - 기존 호환성 유지)"""
     conn = get_db_connection()
     conn.execute('DELETE FROM prompts WHERE id = ?', (id,))
     conn.commit()
@@ -255,6 +260,25 @@ def delete_prompt(id):
     
     flash('프롬프트가 삭제되었습니다.', 'success')
     return redirect(url_for('index'))
+
+@app.route('/prompt/<int:id>', methods=['DELETE'])
+def delete_prompt_api(id):
+    """프롬프트 삭제 (DELETE 메서드 - API용)"""
+    try:
+        conn = get_db_connection()
+        conn.execute('DELETE FROM prompts WHERE id = ?', (id,))
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'message': '프롬프트가 삭제되었습니다.'
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'삭제 중 오류가 발생했습니다: {str(e)}'
+        }), 500
 
 @app.route('/api/copy/<int:id>')
 def copy_prompt(id):
@@ -281,6 +305,55 @@ def copy_prompt(id):
     
     return jsonify({'success': False, 'message': '프롬프트를 찾을 수 없습니다.'})
 
+# API 엔드포인트 추가
+@app.route('/api/prompt/<int:prompt_id>')
+def api_get_prompt(prompt_id):
+    """프롬프트 상세 정보를 JSON으로 반환"""
+    try:
+        conn = sqlite3.connect('prompts.db')
+        cursor = conn.cursor()
+        
+        # 프롬프트 정보 조회
+        cursor.execute('''
+            SELECT p.*, c.name as category_name, c.color as category_color
+            FROM prompts p
+            LEFT JOIN categories c ON p.category = c.name
+            WHERE p.id = ?
+        ''', (prompt_id,))
+        
+        prompt_data = cursor.fetchone()
+        
+        if prompt_data:
+            # 컬럼명 가져오기
+            columns = [description[0] for description in cursor.description]
+            prompt = dict(zip(columns, prompt_data))
+            
+            # 날짜 형식 변환
+            if prompt.get('created_at'):
+                prompt['created_at'] = prompt['created_at']
+            if prompt.get('updated_at'):
+                prompt['updated_at'] = prompt['updated_at']
+            
+            return jsonify({
+                'success': True,
+                'prompt': prompt
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': '프롬프트를 찾을 수 없습니다.'
+            }), 404
+            
+    except Exception as e:
+        print(f"API 오류: {e}")
+        return jsonify({
+            'success': False,
+            'message': '서버 오류가 발생했습니다.'
+        }), 500
+    finally:
+        if 'conn' in locals():
+            conn.close()
+
 @app.route('/categories')
 def categories():
     """카테고리 관리"""
@@ -289,6 +362,101 @@ def categories():
     conn.close()
     
     return render_template('categories.html', categories=categories)
+
+@app.route('/api/categories')
+def api_get_categories():
+    """카테고리 목록을 JSON으로 반환"""
+    try:
+        conn = get_db_connection()
+        categories = conn.execute('SELECT * FROM categories ORDER BY name').fetchall()
+        conn.close()
+        
+        # 카테고리 데이터를 딕셔너리 리스트로 변환
+        categories_list = []
+        for category in categories:
+            categories_list.append({
+                'id': category['id'],
+                'name': category['name'],
+                'color': category['color'],
+                'created_at': category['created_at']
+            })
+        
+        return jsonify({
+            'success': True,
+            'categories': categories_list
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'카테고리 목록을 가져오는 중 오류가 발생했습니다: {str(e)}'
+        }), 500
+
+@app.route('/api/category/new', methods=['POST'])
+def api_new_category():
+    """새 카테고리 추가 (API용)"""
+    try:
+        data = request.get_json()
+        name = data.get('name')
+        color = data.get('color', '#6366f1')
+        
+        if not name:
+            return jsonify({'success': False, 'message': '카테고리 이름은 필수입니다.'})
+        
+        conn = get_db_connection()
+        try:
+            conn.execute('INSERT INTO categories (name, color) VALUES (?, ?)', (name, color))
+            conn.commit()
+            
+            # 새로 추가된 카테고리 정보 반환
+            new_category = conn.execute('SELECT * FROM categories WHERE name = ?', (name,)).fetchone()
+            conn.close()
+            
+            return jsonify({
+                'success': True,
+                'message': '카테고리가 추가되었습니다.',
+                'category': {
+                    'id': new_category['id'],
+                    'name': new_category['name'],
+                    'color': new_category['color'],
+                    'created_at': new_category['created_at']
+                }
+            })
+        except sqlite3.IntegrityError:
+            conn.close()
+            return jsonify({'success': False, 'message': '이미 존재하는 카테고리입니다.'})
+        except Exception as e:
+            conn.close()
+            return jsonify({'success': False, 'message': f'카테고리 추가 중 오류가 발생했습니다: {str(e)}'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'요청 처리 중 오류가 발생했습니다: {str(e)}'})
+
+@app.route('/api/category/<int:id>/delete', methods=['DELETE'])
+def api_delete_category(id):
+    """카테고리 삭제 (API용)"""
+    try:
+        conn = get_db_connection()
+        
+        # 해당 카테고리를 사용하는 프롬프트가 있는지 확인
+        count = conn.execute('SELECT COUNT(*) FROM prompts WHERE category = (SELECT name FROM categories WHERE id = ?)', (id,)).fetchone()[0]
+        
+        if count > 0:
+            conn.close()
+            return jsonify({'success': False, 'message': '이 카테고리를 사용하는 프롬프트가 있어 삭제할 수 없습니다.'})
+        
+        # 카테고리 삭제
+        conn.execute('DELETE FROM categories WHERE id = ?', (id,))
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'message': '카테고리가 삭제되었습니다.'
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'카테고리 삭제 중 오류가 발생했습니다: {str(e)}'
+        }), 500
 
 @app.route('/category/new', methods=['POST'])
 def new_category():
