@@ -597,87 +597,230 @@
             // 태그 처리
             const tags = prompt.tags ? prompt.tags.split(',').map(tag => tag.trim()) : [];
 
-            // 우측 패널 업데이트
-            rightPanel.innerHTML = `
-                                 <div class="panel-header">
-                     <h2>프롬프트 상세</h2>
-                 </div>
-                <div class="panel-content">
-                    <div class="prompt-detail-card">
-                        <div class="prompt-header">
-                            <h3 class="prompt-title">${prompt.title}</h3>
-                            <span class="category-tag" style="background: ${prompt.category_color || '#6366f1'}">
-                                ${prompt.category_name || prompt.category}
-                            </span>
-                        </div>
-                        
-                        ${prompt.description ? `
-                        <div class="prompt-description">
-                            <h4><i class="fas fa-info-circle"></i> 설명</h4>
-                            <p>${prompt.description}</p>
-                        </div>
-                        ` : ''}
-                        
-                        <div class="prompt-content">
-                            <h4><i class="fas fa-code"></i> 프롬프트 내용</h4>
-                            <div class="content-box">
-                                <pre>${prompt.content}</pre>
-                            </div>
-                        </div>
-                        
-                        <div class="prompt-meta">
-                            <div class="meta-item">
-                                <span class="meta-label"><i class="fas fa-clock"></i> 생성일:</span>
-                                <span class="meta-value">${createdDate}</span>
-                            </div>
-                            <div class="meta-item">
-                                <span class="meta-label"><i class="fas fa-edit"></i> 수정일:</span>
-                                <span class="meta-value">${updatedDate}</span>
-                            </div>
-                            ${tags.length > 0 ? `
-                            <div class="meta-item">
-                                <span class="meta-label"><i class="fas fa-tags"></i> 태그:</span>
-                                <div class="tags-container">
-                                    ${tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
-                                </div>
-                            </div>
-                            ` : ''}
-                        </div>
-                        
-                        <div class="prompt-stats">
-                            <div class="stat-item">
-                                <span class="stat-number">${prompt.content.length}</span>
-                                <span class="stat-label">문자 수</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-number">${prompt.content.split(' ').length}</span>
-                                <span class="stat-label">단어 수</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-number">${prompt.content.split('\n').length}</span>
-                                <span class="stat-label">줄 수</span>
-                            </div>
-                        </div>
-                        
-                                                 <div class="prompt-actions">
-                             <button class="btn btn-primary" onclick="copyPromptContent('${prompt.content.replace(/'/g, "\\'")}')">
-                                 <i class="fas fa-copy"></i> 클립보드로 복사
-                             </button>
-                             <button class="btn btn-secondary" onclick="editPrompt(${prompt.id})">
-                                 <i class="fas fa-edit"></i> 수정
-                             </button>
-                             <button class="btn btn-danger" onclick="deletePrompt(${prompt.id})">
-                                 <i class="fas fa-trash"></i> 삭제
-                             </button>
-                             <button class="btn btn-success" onclick="showNewPromptForm()">
-                                 <i class="fas fa-plus"></i> 새 프롬프트
-                             </button>
-                         </div>
-                    </div>
-                </div>
-            `;
+            // 우측 패널을 완전히 비우고 새로 구성
+            rightPanel.innerHTML = '';
+
+            // 패널 헤더 생성
+            const panelHeader = document.createElement('div');
+            panelHeader.className = 'panel-header';
+            panelHeader.innerHTML = '<h2>프롬프트 상세</h2>';
+            rightPanel.appendChild(panelHeader);
+
+            // 패널 콘텐츠 생성
+            const panelContent = document.createElement('div');
+            panelContent.className = 'panel-content';
+
+            const detailCard = document.createElement('div');
+            detailCard.className = 'prompt-detail-card';
+
+            // 프롬프트 헤더
+            const promptHeader = document.createElement('div');
+            promptHeader.className = 'prompt-header';
+
+            const titleElement = document.createElement('h3');
+            titleElement.className = 'prompt-title';
+            titleElement.textContent = prompt.title;
+            promptHeader.appendChild(titleElement);
+
+            const categoryElement = document.createElement('span');
+            categoryElement.className = 'category-tag';
+            categoryElement.style.background = prompt.category_color || '#6366f1';
+            categoryElement.textContent = prompt.category_name || prompt.category;
+            promptHeader.appendChild(categoryElement);
+
+            detailCard.appendChild(promptHeader);
+
+            // 설명 (있는 경우)
+            if (prompt.description) {
+                const descriptionDiv = document.createElement('div');
+                descriptionDiv.className = 'prompt-description';
+
+                const descriptionTitle = document.createElement('h4');
+                descriptionTitle.innerHTML = '<i class="fas fa-info-circle"></i> 설명';
+                descriptionDiv.appendChild(descriptionTitle);
+
+                const descriptionText = document.createElement('p');
+                descriptionText.textContent = prompt.description;
+                descriptionDiv.appendChild(descriptionText);
+
+                detailCard.appendChild(descriptionDiv);
+            }
+
+            // 프롬프트 내용
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'prompt-content';
+
+            const contentTitle = document.createElement('h4');
+            contentTitle.innerHTML = '<i class="fas fa-code"></i> 프롬프트 내용';
+            contentDiv.appendChild(contentTitle);
+
+            const contentBox = document.createElement('div');
+            contentBox.className = 'content-box';
+
+            const contentPre = document.createElement('pre');
+            contentPre.id = 'prompt-content-display';
+            contentBox.appendChild(contentPre);
+
+            contentDiv.appendChild(contentBox);
+            detailCard.appendChild(contentDiv);
+
+            // 메타 정보
+            const metaDiv = document.createElement('div');
+            metaDiv.className = 'prompt-meta';
+
+            // 생성일
+            const createdItem = document.createElement('div');
+            createdItem.className = 'meta-item';
+            const createdLabel = document.createElement('span');
+            createdLabel.className = 'meta-label';
+            createdLabel.innerHTML = '<i class="fas fa-clock"></i> 생성일:';
+            const createdValue = document.createElement('span');
+            createdValue.className = 'meta-value';
+            createdValue.textContent = createdDate;
+            createdItem.appendChild(createdLabel);
+            createdItem.appendChild(createdValue);
+            metaDiv.appendChild(createdItem);
+
+            // 수정일
+            const updatedItem = document.createElement('div');
+            updatedItem.className = 'meta-item';
+            const updatedLabel = document.createElement('span');
+            updatedLabel.className = 'meta-label';
+            updatedLabel.innerHTML = '<i class="fas fa-edit"></i> 수정일:';
+            const updatedValue = document.createElement('span');
+            updatedValue.className = 'meta-value';
+            updatedValue.textContent = updatedDate;
+            updatedItem.appendChild(updatedLabel);
+            updatedItem.appendChild(updatedValue);
+            metaDiv.appendChild(updatedItem);
+
+            // 태그 (있는 경우)
+            if (tags.length > 0) {
+                const tagsItem = document.createElement('div');
+                tagsItem.className = 'meta-item';
+                const tagsLabel = document.createElement('span');
+                tagsLabel.className = 'meta-label';
+                tagsLabel.innerHTML = '<i class="fas fa-tags"></i> 태그:';
+                const tagsContainer = document.createElement('div');
+                tagsContainer.className = 'tags-container';
+
+                tags.forEach(tag => {
+                    const tagElement = document.createElement('span');
+                    tagElement.className = 'tag';
+                    tagElement.textContent = tag;
+                    tagsContainer.appendChild(tagElement);
+                });
+
+                tagsItem.appendChild(tagsLabel);
+                tagsItem.appendChild(tagsContainer);
+                metaDiv.appendChild(tagsItem);
+            }
+
+            detailCard.appendChild(metaDiv);
+
+            // 통계
+            const statsDiv = document.createElement('div');
+            statsDiv.className = 'prompt-stats';
+
+            // 프롬프트 내용에서 \r\n 제거하여 안전하게 처리
+            const cleanContent = prompt.content.replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
+
+            // 문자 수
+            const charItem = document.createElement('div');
+            charItem.className = 'stat-item';
+            const charNumber = document.createElement('span');
+            charNumber.className = 'stat-number';
+            charNumber.textContent = cleanContent.length;
+            const charLabel = document.createElement('span');
+            charLabel.className = 'stat-label';
+            charLabel.textContent = '문자 수';
+            charItem.appendChild(charNumber);
+            charItem.appendChild(charLabel);
+            statsDiv.appendChild(charItem);
+
+            // 단어 수
+            const wordItem = document.createElement('div');
+            wordItem.className = 'stat-item';
+            const wordNumber = document.createElement('span');
+            wordNumber.className = 'stat-number';
+            wordNumber.textContent = cleanContent.split(' ').length;
+            const wordLabel = document.createElement('span');
+            wordLabel.className = 'stat-label';
+            wordLabel.textContent = '단어 수';
+            wordItem.appendChild(wordNumber);
+            wordItem.appendChild(wordLabel);
+            statsDiv.appendChild(wordItem);
+
+            // 줄 수
+            const lineItem = document.createElement('div');
+            lineItem.className = 'stat-item';
+            const lineNumber = document.createElement('span');
+            lineNumber.className = 'stat-number';
+            lineNumber.textContent = cleanContent.split('\n').length;
+            const lineLabel = document.createElement('span');
+            lineLabel.className = 'stat-label';
+            lineLabel.textContent = '줄 수';
+            lineItem.appendChild(lineNumber);
+            lineItem.appendChild(lineLabel);
+            statsDiv.appendChild(lineItem);
+
+            detailCard.appendChild(statsDiv);
+
+            // 액션 버튼들
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'prompt-actions';
+
+            // 클립보드 복사 버튼
+            const copyButton = document.createElement('button');
+            copyButton.className = 'btn btn-primary copy-btn';
+            copyButton.setAttribute('data-prompt-id', prompt.id);
+            copyButton.innerHTML = '<i class="fas fa-copy"></i> 클립보드로 복사';
+            actionsDiv.appendChild(copyButton);
+
+            // 수정 버튼
+            const editBtn = document.createElement('button');
+            editBtn.className = 'btn btn-secondary';
+            editBtn.innerHTML = '<i class="fas fa-edit"></i> 수정';
+            editBtn.onclick = () => editPrompt(prompt.id);
+            actionsDiv.appendChild(editBtn);
+
+            // 삭제 버튼
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'btn btn-danger';
+            deleteBtn.innerHTML = '<i class="fas fa-trash"></i> 삭제';
+            deleteBtn.onclick = () => deletePrompt(prompt.id);
+            actionsDiv.appendChild(deleteBtn);
+
+            // 새 프롬프트 버튼
+            const newBtn = document.createElement('button');
+            newBtn.className = 'btn btn-success';
+            newBtn.innerHTML = '<i class="fas fa-plus"></i> 새 프롬프트';
+            newBtn.onclick = showNewPromptForm;
+            actionsDiv.appendChild(newBtn);
+
+            detailCard.appendChild(actionsDiv);
+
+            panelContent.appendChild(detailCard);
+            rightPanel.appendChild(panelContent);
 
             console.log('Right panel updated with full details successfully');
+
+            // 전역 변수에 정리된 프롬프트 내용 저장
+            window.currentPromptContent = cleanContent;
+
+            // 프롬프트 내용을 안전하게 표시
+            const contentDisplay = rightPanel.querySelector('#prompt-content-display');
+            if (contentDisplay) {
+                contentDisplay.textContent = cleanContent;
+            }
+
+            // 클립보드 복사 버튼 이벤트 리스너 추가
+            const copyButtonElement = rightPanel.querySelector('.copy-btn');
+            if (copyButtonElement) {
+                copyButtonElement.addEventListener('click', function () {
+                    copyPromptContent(window.currentPromptContent);
+                });
+            }
         }
 
         // 프롬프트 보기
@@ -882,7 +1025,7 @@
                                     <span style="color: red;">*</span> 내용
                                 </label>
                                 <textarea name="content" required class="input-glass" style="width: 100%; height: 300px;" 
-                                          placeholder="프롬프트 내용을 입력하세요">${prompt.content}</textarea>
+                                          placeholder="프롬프트 내용을 입력하세요" id="edit-content-textarea"></textarea>
                             </div>
                             
                             <div>
@@ -898,6 +1041,15 @@
             `;
 
             console.log('Edit form displayed successfully');
+
+            // 프롬프트 내용에서 \r\n 제거하여 안전하게 처리
+            const cleanContent = prompt.content.replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
+
+            // 프롬프트 내용을 안전하게 설정
+            const contentTextarea = rightPanel.querySelector('#edit-content-textarea');
+            if (contentTextarea) {
+                contentTextarea.value = cleanContent;
+            }
         }
 
         // 새 프롬프트 폼 표시
@@ -1302,7 +1454,7 @@
                         ">${content}</textarea>
                     </div>
                     <div style="display: flex; gap: var(--spacing-3); justify-content: flex-end;">
-                        <button onclick="copyTextToClipboard('${content.replace(/'/g, "\\'")}')" class="btn-glass btn-glass-primary">
+                        <button class="btn-glass btn-glass-primary copy-modal-btn">
                             <i class="fas fa-copy"></i>
                             텍스트 복사
                         </button>
@@ -1315,6 +1467,14 @@
 
             modal.classList.add('modal');
             document.body.appendChild(modal);
+
+            // 복사 모달 버튼 이벤트 리스너 추가
+            const copyModalBtn = modal.querySelector('.copy-modal-btn');
+            if (copyModalBtn) {
+                copyModalBtn.addEventListener('click', function () {
+                    copyTextToClipboard(content);
+                });
+            }
 
             // 원래 버튼 상태 복원
             const button = document.querySelector(`[onclick*="copyToClipboard(${promptId}"]`);
@@ -1592,8 +1752,8 @@
             const categoryList = document.getElementById('category-list');
             if (categoryList) {
                 categoryList.innerHTML = `
-                    <div class="category-error">
-                        <i class="fas fa-exclamation-triangle"></i>
+                                         <div class="category-error">
+                         <i class="fas fa-exclamation-triangle"></i>
                         <p>${message}</p>
                     </div>
                 `;

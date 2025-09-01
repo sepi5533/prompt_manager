@@ -21,7 +21,7 @@ class PromptManagerPWA {
       try {
         const registration = await navigator.serviceWorker.register('/static/sw.js');
         console.log('Service Worker 등록 성공:', registration);
-        
+
         // 업데이트 확인
         registration.addEventListener('updatefound', () => {
           const newWorker = registration.installing;
@@ -61,7 +61,7 @@ class PromptManagerPWA {
       this.installButton.innerHTML = '<i class="fas fa-download"></i> 앱 설치';
       this.installButton.className = 'install-button';
       this.installButton.onclick = () => this.installApp();
-      
+
       const header = document.querySelector('header');
       if (header) {
         header.appendChild(this.installButton);
@@ -116,8 +116,13 @@ class PromptManagerPWA {
     if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
       try {
         await navigator.serviceWorker.ready;
-        await navigator.serviceWorker.sync.register('background-sync');
-        console.log('백그라운드 동기화 등록 완료');
+        // background-sync는 지원되지 않을 수 있으므로 안전하게 처리
+        if ('sync' in window.ServiceWorkerRegistration.prototype) {
+          await navigator.serviceWorker.sync.register('background-sync');
+          console.log('백그라운드 동기화 등록 완료');
+        } else {
+          console.log('백그라운드 동기화는 지원되지 않습니다.');
+        }
       } catch (error) {
         console.error('백그라운드 동기화 등록 실패:', error);
       }
@@ -155,7 +160,7 @@ class PromptManagerPWA {
     indicator.className = 'offline-indicator';
     indicator.innerHTML = '<i class="fas fa-wifi-slash"></i> 오프라인 모드';
     document.body.appendChild(indicator);
-    
+
     this.updateOfflineIndicator();
   }
 
